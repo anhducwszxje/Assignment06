@@ -1,7 +1,7 @@
 # Báo cáo Assignment 06: Recurrent Neural Networks
 
 - `main.tex`: toàn bộ nội dung, bảng, công thức và tài liệu tham khảo.
-- `images/`: logo, khung bìa, hình kết quả và 21 ảnh mã nguồn trích từ năm notebook.
+- `images/`: logo, khung bìa, hình kết quả, 21 ảnh mã nguồn và 7 ảnh demo giao diện thực tế.
 - `Assignment_06_LaTeX_Report.zip`: gói nguồn để nhập vào Overleaf.
 
 ## Biên dịch
@@ -17,4 +17,4 @@ Mẫu dùng Times New Roman nếu font có sẵn, hoặc TeX Gyre Termes làm fo
 
 Bản PDF đã kiểm tra được lưu tại `output/pdf/assignment06_technical_report.pdf`, tính từ thư mục gốc dự án INTEL_SYS.
 
-Báo cáo có 60 trang, 21 bảng và 41 hình. Các ảnh mã nguồn ghi tên notebook, chỉ số thực thi và số dòng của cell; phần giải thích đi kèm làm rõ dữ liệu đầu vào, thao tác xử lý và đầu ra. Chương triển khai trình bày suy luận trong notebook và thiết kế dịch vụ; hiện chưa có ứng dụng web/API độc lập.
+Báo cáo có 69 trang, 24 bảng và 48 hình. Các ảnh mã nguồn ghi tên notebook, chỉ số thực thi và số dòng của cell; phần giải thích đi kèm làm rõ dữ liệu đầu vào, thao tác xử lý và đầu ra. Chương triển khai trình bày ứng dụng FastAPI, lưu/nạp bốn mô hình, 7 ảnh demo thực tế, nhận xét kết quả và 41 kiểm tra dịch vụ cục bộ. Cấu hình Render đã được chuẩn bị; chưa triển khai máy chủ công khai trong phiên thực hiện này.

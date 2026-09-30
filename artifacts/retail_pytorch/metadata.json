@@ -1,0 +1,43 @@
+{
+  "id": "retail_pytorch",
+  "dataset": "retail",
+  "framework": "pytorch",
+  "features": [
+    "daily_revenue",
+    "daily_quantity",
+    "transaction_count",
+    "avg_order_value"
+  ],
+  "target_index": 0,
+  "window": 14,
+  "hidden_size": 32,
+  "batch_size": 16,
+  "currency": "GBP",
+  "best_epoch": 100,
+  "epochs_run": 100,
+  "parameters": 1249,
+  "train_end": "2011-05-09",
+  "validation_end": "2011-08-23",
+  "test_start": "2011-09-11",
+  "test_end": "2011-12-09",
+  "test_samples": 78,
+  "metrics": {
+    "MAE": 15567.135204269414,
+    "RMSE": 25337.075507414927,
+    "MAPE (%)": 33.83114543497944,
+    "R²": 0.062340125364308774
+  },
+  "baseline_metrics": {
+    "MAE": 22192.87523076923,
+    "RMSE": 30387.101612763294,
+    "MAPE (%)": 53.576478813335896,
+    "R²": -0.3486862084772213
+  },
+  "source_notebook": "02_RNN_PyTorch_OnlineRetail.ipynb",
+  "source_sha256": "ea7de16e6000118932cb046c35523ec9b5592dcaefb706225bfcd1bef0379879",
+  "exported_at": "2026-09-30T09:58:36.096593+00:00",
+  "python": "3.12.14",
+  "runtime": {
+    "torch": "2.14.0+cpu"
+  }
+}

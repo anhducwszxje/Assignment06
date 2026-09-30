@@ -1,0 +1,44 @@
+{
+  "id": "retail_keras",
+  "dataset": "retail",
+  "framework": "keras",
+  "features": [
+    "daily_revenue",
+    "daily_quantity",
+    "transaction_count",
+    "avg_order_value"
+  ],
+  "target_index": 0,
+  "window": 14,
+  "hidden_size": 32,
+  "batch_size": 16,
+  "currency": "GBP",
+  "best_epoch": 28,
+  "epochs_run": 43,
+  "parameters": 1217,
+  "train_end": "2011-05-09",
+  "validation_end": "2011-08-23",
+  "test_start": "2011-09-11",
+  "test_end": "2011-12-09",
+  "test_samples": 78,
+  "metrics": {
+    "MAE": 15954.781491688489,
+    "RMSE": 25885.711326773835,
+    "MAPE (%)": 32.58475514091679,
+    "R²": 0.021293286001238032
+  },
+  "baseline_metrics": {
+    "MAE": 22192.87523076923,
+    "RMSE": 30387.101612763294,
+    "MAPE (%)": 53.576478813335896,
+    "R²": -0.3486862084772213
+  },
+  "source_notebook": "04_RNN_Keras_OnlineRetail.ipynb",
+  "source_sha256": "462cf68b6e6a77b4f4ae2647b6a458d82f37a354a3afa7e048c9dcd7a666568a",
+  "exported_at": "2026-09-30T09:59:48.356888+00:00",
+  "python": "3.12.14",
+  "runtime": {
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1"
+  }
+}

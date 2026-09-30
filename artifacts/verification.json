@@ -1,0 +1,472 @@
+{
+  "tested_at": "2026-09-30T10:07:55.860226+00:00",
+  "base_url": "http://127.0.0.1:8006",
+  "models": {
+    "stock_pytorch": {
+      "samples": 170,
+      "best_epoch": 100,
+      "max_abs_difference": 0.0,
+      "metrics": {
+        "mae": 7.4264032024249635,
+        "rmse": 8.089772362314473,
+        "mape": 4.516258487636718,
+        "r2": 0.3805277078944368
+      },
+      "last_prediction": {
+        "dataset": "stock",
+        "framework": "pytorch",
+        "currency": "USD",
+        "target_date": "2018-02-07",
+        "prediction": 152.0373070959687,
+        "actual": 159.54,
+        "baseline": 163.03,
+        "absolute_error": 7.502692904031278,
+        "change_pct": -6.742742381176036,
+        "window_start": "2018-01-09",
+        "window_end": "2018-02-06",
+        "window_size": 20,
+        "inference_ms": 0.6163999933050945,
+        "warnings": [
+          "80/100 giá trị đầu vào nằm ngoài khoảng Min-Max của Train; giữ nguyên phép chuẩn hóa."
+        ],
+        "history": [
+          {
+            "date": "2018-01-09",
+            "value": 174.33
+          },
+          {
+            "date": "2018-01-10",
+            "value": 174.29
+          },
+          {
+            "date": "2018-01-11",
+            "value": 175.28
+          },
+          {
+            "date": "2018-01-12",
+            "value": 177.09
+          },
+          {
+            "date": "2018-01-16",
+            "value": 176.19
+          },
+          {
+            "date": "2018-01-17",
+            "value": 179.1
+          },
+          {
+            "date": "2018-01-18",
+            "value": 179.26
+          },
+          {
+            "date": "2018-01-19",
+            "value": 178.46
+          },
+          {
+            "date": "2018-01-22",
+            "value": 177.0
+          },
+          {
+            "date": "2018-01-23",
+            "value": 177.04
+          },
+          {
+            "date": "2018-01-24",
+            "value": 174.22
+          },
+          {
+            "date": "2018-01-25",
+            "value": 171.11
+          },
+          {
+            "date": "2018-01-26",
+            "value": 171.51
+          },
+          {
+            "date": "2018-01-29",
+            "value": 167.96
+          },
+          {
+            "date": "2018-01-30",
+            "value": 166.97
+          },
+          {
+            "date": "2018-01-31",
+            "value": 167.43
+          },
+          {
+            "date": "2018-02-01",
+            "value": 167.78
+          },
+          {
+            "date": "2018-02-02",
+            "value": 160.5
+          },
+          {
+            "date": "2018-02-05",
+            "value": 156.49
+          },
+          {
+            "date": "2018-02-06",
+            "value": 163.03
+          }
+        ]
+      },
+      "warm_requests": 10,
+      "http_median_ms": 5.664750002324581,
+      "http_p95_ms": 6.763174998195608,
+      "inference_median_ms": 0.6557500018971041
+    },
+    "stock_keras": {
+      "samples": 170,
+      "best_epoch": 4,
+      "max_abs_difference": 2.7612483506800345e-05,
+      "metrics": {
+        "mae": 13.682096532322376,
+        "rmse": 15.110271787317632,
+        "mape": 8.272997081030805,
+        "r2": -1.161194410242432
+      },
+      "last_prediction": {
+        "dataset": "stock",
+        "framework": "keras",
+        "currency": "USD",
+        "target_date": "2018-02-07",
+        "prediction": 148.40828122682572,
+        "actual": 159.54,
+        "baseline": 163.03,
+        "absolute_error": 11.13171877317427,
+        "change_pct": -8.96872892913837,
+        "window_start": "2018-01-09",
+        "window_end": "2018-02-06",
+        "window_size": 20,
+        "inference_ms": 65.27610000193818,
+        "warnings": [
+          "80/100 giá trị đầu vào nằm ngoài khoảng Min-Max của Train; giữ nguyên phép chuẩn hóa."
+        ],
+        "history": [
+          {
+            "date": "2018-01-09",
+            "value": 174.33
+          },
+          {
+            "date": "2018-01-10",
+            "value": 174.29
+          },
+          {
+            "date": "2018-01-11",
+            "value": 175.28
+          },
+          {
+            "date": "2018-01-12",
+            "value": 177.09
+          },
+          {
+            "date": "2018-01-16",
+            "value": 176.19
+          },
+          {
+            "date": "2018-01-17",
+            "value": 179.1
+          },
+          {
+            "date": "2018-01-18",
+            "value": 179.26
+          },
+          {
+            "date": "2018-01-19",
+            "value": 178.46
+          },
+          {
+            "date": "2018-01-22",
+            "value": 177.0
+          },
+          {
+            "date": "2018-01-23",
+            "value": 177.04
+          },
+          {
+            "date": "2018-01-24",
+            "value": 174.22
+          },
+          {
+            "date": "2018-01-25",
+            "value": 171.11
+          },
+          {
+            "date": "2018-01-26",
+            "value": 171.51
+          },
+          {
+            "date": "2018-01-29",
+            "value": 167.96
+          },
+          {
+            "date": "2018-01-30",
+            "value": 166.97
+          },
+          {
+            "date": "2018-01-31",
+            "value": 167.43
+          },
+          {
+            "date": "2018-02-01",
+            "value": 167.78
+          },
+          {
+            "date": "2018-02-02",
+            "value": 160.5
+          },
+          {
+            "date": "2018-02-05",
+            "value": 156.49
+          },
+          {
+            "date": "2018-02-06",
+            "value": 163.03
+          }
+        ]
+      },
+      "warm_requests": 10,
+      "http_median_ms": 51.303899999766145,
+      "http_p95_ms": 104.0794650005409,
+      "inference_median_ms": 45.102300002326956
+    },
+    "retail_pytorch": {
+      "samples": 78,
+      "best_epoch": 100,
+      "max_abs_difference": 0.0,
+      "metrics": {
+        "mae": 15567.135204269414,
+        "rmse": 25337.075507414927,
+        "mape": 33.83114543497944,
+        "r2": 0.062340125364308774
+      },
+      "last_prediction": {
+        "dataset": "retail",
+        "framework": "pytorch",
+        "currency": "GBP",
+        "target_date": "2011-12-09",
+        "prediction": 49626.040149374014,
+        "actual": 200918.97999999998,
+        "baseline": 82371.55,
+        "absolute_error": 151292.93985062596,
+        "change_pct": -39.75342196501824,
+        "window_start": "2011-11-23",
+        "window_end": "2011-12-08",
+        "window_size": 14,
+        "inference_ms": 0.5171000011614524,
+        "warnings": [],
+        "history": [
+          {
+            "date": "2011-11-23",
+            "value": 79847.0
+          },
+          {
+            "date": "2011-11-24",
+            "value": 50759.21
+          },
+          {
+            "date": "2011-11-25",
+            "value": 50690.4
+          },
+          {
+            "date": "2011-11-27",
+            "value": 20279.37
+          },
+          {
+            "date": "2011-11-28",
+            "value": 56965.73
+          },
+          {
+            "date": "2011-11-29",
+            "value": 72384.82
+          },
+          {
+            "date": "2011-11-30",
+            "value": 60025.57
+          },
+          {
+            "date": "2011-12-01",
+            "value": 52068.63
+          },
+          {
+            "date": "2011-12-02",
+            "value": 57476.48
+          },
+          {
+            "date": "2011-12-04",
+            "value": 24477.47
+          },
+          {
+            "date": "2011-12-05",
+            "value": 88620.84
+          },
+          {
+            "date": "2011-12-06",
+            "value": 56558.83
+          },
+          {
+            "date": "2011-12-07",
+            "value": 75315.55
+          },
+          {
+            "date": "2011-12-08",
+            "value": 82371.55
+          }
+        ]
+      },
+      "warm_requests": 10,
+      "http_median_ms": 5.651150000630878,
+      "http_p95_ms": 6.163435000780737,
+      "inference_median_ms": 0.6157999996503349
+    },
+    "retail_keras": {
+      "samples": 78,
+      "best_epoch": 28,
+      "max_abs_difference": 0.027513217923115008,
+      "metrics": {
+        "mae": 15954.780830313057,
+        "rmse": 25885.71132228586,
+        "mape": 32.58475543521893,
+        "r2": 0.021293286340607342
+      },
+      "last_prediction": {
+        "dataset": "retail",
+        "framework": "keras",
+        "currency": "GBP",
+        "target_date": "2011-12-09",
+        "prediction": 47670.12892616511,
+        "actual": 200918.97999999998,
+        "baseline": 82371.55,
+        "absolute_error": 153248.85107383487,
+        "change_pct": -42.12792046991333,
+        "window_start": "2011-11-23",
+        "window_end": "2011-12-08",
+        "window_size": 14,
+        "inference_ms": 35.45339999982389,
+        "warnings": [],
+        "history": [
+          {
+            "date": "2011-11-23",
+            "value": 79847.0
+          },
+          {
+            "date": "2011-11-24",
+            "value": 50759.21
+          },
+          {
+            "date": "2011-11-25",
+            "value": 50690.4
+          },
+          {
+            "date": "2011-11-27",
+            "value": 20279.37
+          },
+          {
+            "date": "2011-11-28",
+            "value": 56965.73
+          },
+          {
+            "date": "2011-11-29",
+            "value": 72384.82
+          },
+          {
+            "date": "2011-11-30",
+            "value": 60025.57
+          },
+          {
+            "date": "2011-12-01",
+            "value": 52068.63
+          },
+          {
+            "date": "2011-12-02",
+            "value": 57476.48
+          },
+          {
+            "date": "2011-12-04",
+            "value": 24477.47
+          },
+          {
+            "date": "2011-12-05",
+            "value": 88620.84
+          },
+          {
+            "date": "2011-12-06",
+            "value": 56558.83
+          },
+          {
+            "date": "2011-12-07",
+            "value": 75315.55
+          },
+          {
+            "date": "2011-12-08",
+            "value": 82371.55
+          }
+        ]
+      },
+      "warm_requests": 10,
+      "http_median_ms": 53.47049999909359,
+      "http_p95_ms": 66.65057999634882,
+      "inference_median_ms": 45.86319999725674
+    }
+  },
+  "invalid_inputs": [
+    {
+      "case": "too_short",
+      "status": 400,
+      "detail": "CSV cần từ 20 đến 2000 dòng quan sát."
+    },
+    {
+      "case": "missing_column",
+      "status": 400,
+      "detail": "CSV cần đúng các cột theo thứ tự: date, open, high, low, close, volume"
+    },
+    {
+      "case": "duplicate_date",
+      "status": 400,
+      "detail": "Ngày phải hợp lệ, tăng dần và không trùng lặp."
+    },
+    {
+      "case": "reverse_date",
+      "status": 400,
+      "detail": "Ngày phải hợp lệ, tăng dần và không trùng lặp."
+    },
+    {
+      "case": "nan",
+      "status": 400,
+      "detail": "Dữ liệu có ô trống, NaN hoặc giá trị vô hạn."
+    },
+    {
+      "case": "negative_volume",
+      "status": 400,
+      "detail": "Các đặc trưng đầu vào không được âm."
+    },
+    {
+      "case": "invalid_ohlc",
+      "status": 400,
+      "detail": "OHLC không hợp lệ: High phải lớn nhất và Low phải nhỏ nhất."
+    },
+    {
+      "case": "invalid_aov",
+      "status": 400
+    },
+    {
+      "case": "unknown_framework",
+      "status": 422
+    },
+    {
+      "case": "unknown_date",
+      "status": 400
+    },
+    {
+      "case": "mixed_sources",
+      "status": 400
+    },
+    {
+      "case": "oversize_csv",
+      "status": 422
+    }
+  ],
+  "checks_passed": 41
+}

@@ -1,0 +1,45 @@
+{
+  "id": "stock_keras",
+  "dataset": "stock",
+  "framework": "keras",
+  "features": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "target_index": 3,
+  "window": 20,
+  "hidden_size": 32,
+  "batch_size": 32,
+  "currency": "USD",
+  "best_epoch": 4,
+  "epochs_run": 19,
+  "parameters": 1249,
+  "train_end": "2016-08-08",
+  "validation_end": "2017-05-08",
+  "test_start": "2017-06-07",
+  "test_end": "2018-02-07",
+  "test_samples": 170,
+  "metrics": {
+    "MAE": 13.682096857175127,
+    "RMSE": 15.110271288100472,
+    "MAPE (%)": 8.272997364354586,
+    "R²": -1.1611942674382085
+  },
+  "baseline_metrics": {
+    "MAE": 1.5033529411764717,
+    "RMSE": 2.112959034707711,
+    "MAPE (%)": 0.9368296349458003,
+    "R²": 0.9577398107177243
+  },
+  "source_notebook": "03_RNN_Keras_Stock.ipynb",
+  "source_sha256": "812bb7b0a9031e3fccf4f48cd3626fe3657cd6b264207bf98c39e743760f2448",
+  "exported_at": "2026-09-30T09:59:14.970597+00:00",
+  "python": "3.12.14",
+  "runtime": {
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1"
+  }
+}

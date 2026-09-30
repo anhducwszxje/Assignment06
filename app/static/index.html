@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RNN Forecast Lab · Assignment 06</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/"><span class="mark">R</span><span>RNN <b>Forecast Lab</b><small>ASSIGNMENT 06 · BÙI ANH ĐỨC</small></span></a>
+  <nav><a href="/docs" target="_blank" rel="noopener">API Docs ↗</a><a href="https://github.com/anhducwszxje/Assignment06" target="_blank" rel="noopener">GitHub ↗</a><span id="health" class="status">Đang kết nối…</span></nav>
+</header>
+<main>
+  <div class="intro"><div><p class="eyebrow">TIME SERIES · VANILLA RNN</p><h1>Từ chuỗi quan sát đến dự báo.</h1><p>Khám phá dự báo giá cổ phiếu và doanh số bằng PyTorch & Keras.</p></div><span class="research-badge">DỮ LIỆU LỊCH SỬ<br><b>Dự báo một bước</b></span></div>
+  <div class="workspace">
+    <aside class="panel controls">
+      <div class="section-label"><span>01</span> THIẾT LẬP DỰ BÁO</div>
+      <label for="dataset">Bài toán</label>
+      <select id="dataset"><option value="stock">Cổ phiếu AAPL · USD</option><option value="retail">Online Retail II · GBP</option></select>
+      <label>Framework</label>
+      <div class="segmented" role="group" aria-label="Framework"><button id="pytorch" class="active" aria-pressed="true">PyTorch</button><button id="keras" aria-pressed="false">Keras</button></div>
+      <div id="model-info" class="model-info">Đang tải mô hình…</div>
+      <label for="source">Nguồn đầu vào</label>
+      <select id="source"><option value="sample">Dữ liệu mẫu trong tập Test</option><option value="csv">Tải CSV của bạn</option></select>
+      <div id="sample-fields"><label for="target-date">Ngày cần dự báo</label><select id="target-date"></select><p class="hint">Cửa sổ chỉ chứa các quan sát trước ngày này.</p></div>
+      <div id="csv-fields" hidden><label for="csv-file">Tệp CSV</label><input id="csv-file" type="file" accept=".csv,text/csv"><label for="csv-text">Nội dung CSV</label><textarea id="csv-text" rows="5" placeholder="date,open,high,low,close,volume"></textarea><p class="hint">Dùng các dòng cuối để dự báo quan sát kế tiếp. Không tự gán ngày lịch tiếp theo.</p></div>
+      <a id="sample-download" class="download" href="/api/sample/stock" download>↓ Tải CSV mẫu</a>
+      <button id="predict" class="primary">Chạy dự báo <span>→</span></button>
+      <div class="protocol"><strong>Quy trình suy luận</strong><p>Cửa sổ lịch sử → MinMax của Train → RNN → Đổi về đơn vị gốc</p></div>
+      <p id="definition" class="hint"></p>
+    </aside>
+    <section class="results" aria-live="polite">
+      <div id="error" class="error" role="alert" hidden></div>
+      <div class="result-heading"><div><div class="section-label"><span>02</span> KẾT QUẢ MỘT BƯỚC</div><h2 id="result-title">Đang tải dữ liệu…</h2></div><span id="latency" class="subtle"></span></div>
+      <div class="cards">
+        <article class="metric prediction"><div>Dự báo RNN <span id="framework-tag">PyTorch</span></div><strong id="prediction">—</strong><small id="prediction-note">Giá trị sau inverse-transform</small></article>
+        <article class="metric"><div>Quan sát gần nhất</div><strong id="baseline">—</strong><small>Baseline persistence</small></article>
+        <article class="metric"><div>Thực tế để đối chiếu</div><strong id="actual">—</strong><small id="actual-note">Không đưa vào cửa sổ dự báo</small></article>
+      </div>
+      <div id="window-info" class="window-info">—</div>
+      <div id="warnings" class="warning" hidden></div>
+      <div class="panel chart-panel">
+        <div class="chart-heading"><div><h2>Kiểm thử cuốn chiếu</h2><p id="chart-subtitle" class="subtle">Dự báo trên toàn bộ tập Test cố định</p></div><div class="legend"><span class="actual-dot">Thực tế</span><span class="predicted-dot">RNN</span><span class="baseline-dot">Baseline</span></div></div>
+        <svg id="chart" viewBox="0 0 900 260" role="img" aria-label="Biểu đồ giá trị thực tế, dự báo RNN và baseline trên tập Test"></svg>
+        <div class="evaluation"><div><span>MAE</span><strong id="mae">—</strong></div><div><span>RMSE</span><strong id="rmse">—</strong></div><div><span>MAPE</span><strong id="mape">—</strong></div><div><span>R²</span><strong id="r2">—</strong></div></div>
+        <p id="comparison" class="comparison">—</p>
+      </div>
+      <p class="footnote">Biểu đồ và chỉ số dùng tập Test lịch sử cố định, kể cả khi nhập CSV riêng. Kết quả này không phải dữ liệu thị trường trực tiếp hay khoảng tin cậy dự báo.</p>
+    </section>
+  </div>
+  <footer><span>PTIT · Phát triển các hệ thống thông minh</span><span>PyTorch + TensorFlow/Keras · FastAPI · CPU</span></footer>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

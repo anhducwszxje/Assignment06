@@ -150,10 +150,10 @@ Hai tập dữ liệu có cấu trúc thời gian khác nhau. Dữ liệu cổ p
 
 Bốn thí nghiệm đều sử dụng Vanilla RNN một tầng, trạng thái ẩn 32 chiều và đầu ra tuyến tính. Mỗi mẫu gồm một cửa sổ quá khứ để dự đoán một giá trị kế tiếp. Dữ liệu được chia theo thời gian; tham số chuẩn hóa chỉ được ước lượng trên tập huấn luyện. Kết quả kiểm thử được đánh giá ở đơn vị gốc và so sánh với mô hình giữ nguyên giá trị quan sát gần nhất, gọi là baseline persistence.
 
-Phạm vi thực nghiệm gồm huấn luyện, chọn trọng số theo validation và suy luận trong notebook. Phần triển khai trình bày luồng suy luận cùng thiết kế đóng gói mô hình; hệ thống hiện chưa có ứng dụng web hoặc API phục vụ độc lập. Các chỉ số trong báo cáo là kết quả kiểm thử ngoại tuyến của bốn mô hình.
+Bốn mô hình được đánh giá trong notebook và đóng gói thành API cùng giao diện web đã kiểm thử cục bộ. Chỉ số dự báo thuộc tập Test lịch sử; số đo dịch vụ được trình bày riêng. Cấu hình Render đã được chuẩn bị cho bước triển khai công khai.
 
 \section{Tổ chức nội dung}
-Báo cáo bắt đầu bằng cơ sở toán học của RNN, gồm hàm chuyển trạng thái, hợp hàm, hình dạng tensor, hàm mất mát và thuật toán Backpropagation Through Time. Phần dữ liệu mô tả nguồn, thuộc tính, chất lượng và phân bố của hai tập dữ liệu. Các chương tiếp theo trình bày giao thức dự báo, mã cài đặt, kết quả và phân tích sai số. Chương cuối về triển khai xác định các thành phần cần có để đưa cùng phép biến đổi đã dùng khi huấn luyện vào quá trình suy luận.
+Báo cáo bắt đầu bằng cơ sở toán học của RNN, gồm hàm chuyển trạng thái, hợp hàm, hình dạng tensor, hàm mất mát và thuật toán Backpropagation Through Time. Phần dữ liệu mô tả nguồn, thuộc tính, chất lượng và phân bố của hai tập dữ liệu. Các chương tiếp theo trình bày giao thức dự báo, mã cài đặt, kết quả và phân tích sai số. Chương triển khai mô tả đóng gói mô hình, API, demo giao diện, kiểm thử cục bộ và cấu hình Render.
 
 
 Ảnh mã nguồn trong báo cáo được trích từ các cell đã thực thi của năm notebook. Dòng đầu mỗi ảnh ghi tên tệp và chỉ số thực thi \texttt{In}; cột bên trái giữ số dòng trong cell. Dấu ba chấm thể hiện khoảng dòng được lược khỏi ảnh, còn những dòng dài được xuống dòng khi hiển thị. Các đoạn giải thích sử dụng đúng tên biến và hàm trong mã nguồn.
@@ -940,86 +940,177 @@ Mỗi cấu hình chỉ có một seed và một lần chia theo thời gian. B�
 LSTM và GRU là các hướng mở rộng kiến trúc, nhưng cần so sánh trên cùng dữ liệu và giao thức với Vanilla RNN và baseline. Mọi cấu hình bổ sung được lựa chọn bằng Validation; một tập kiểm thử về sau hoặc các mốc rolling evaluation sẽ dùng để đánh giá mức cải thiện sau lựa chọn.
 
 
-\chapter{Quy trình suy luận và thiết kế triển khai}
+\chapter{Triển khai ứng dụng và demo giao diện}
 \label{chap:deployment}
 
-\section{Suy luận đã thực hiện trong notebook}
-Bốn notebook thực nghiệm đã thực hiện suy luận trên tập Test bằng trọng số được chọn theo Validation. Luồng xử lý gồm lấy cửa sổ đã chuẩn hóa, gọi mô hình ở chế độ suy luận, khôi phục thang đo của biến mục tiêu và gắn kết quả với ngày tương ứng. Các đồ thị và chỉ số ở Chương~\ref{chap:results} được tạo từ luồng này.
+\section{Kiến trúc và phạm vi triển khai}
+Bốn mô hình được đóng gói thành ứng dụng web dùng FastAPI và Uvicorn. Giao diện HTML, CSS và JavaScript gọi API để dự báo, tải CSV mẫu và đánh giá tập Test. Toàn bộ phép suy luận chạy ở phía máy chủ bằng framework tương ứng; trình duyệt đảm nhiệm nhập dữ liệu và hiển thị kết quả. Phiên demo được thực hiện ngày 30/09/2026 trên Windows, Python 3.12.14, CPU, tại \url{http://127.0.0.1:8006}. Tài liệu API tương tác có tại đường dẫn \path{/docs}.
 
-Với PyTorch, \texttt{model.eval()} đặt mô hình ở chế độ đánh giá; \texttt{torch.no\_grad()} tắt việc ghi đồ thị gradient khi dự báo. Hai thao tác có mục đích khác nhau. Với Keras, \texttt{model.predict()} thực hiện suy luận theo batch. Sau đó cùng một target scaler đã fit trên Train được dùng để đưa kết quả về đơn vị gốc.
-
-\begin{lstlisting}[language=Python,caption={Luồng suy luận một cửa sổ bằng PyTorch.}]
-window_scaled = feature_scaler.transform(window_raw)
-batch = torch.tensor(
-    window_scaled[None, :, :], dtype=torch.float32,
-    device=device
-)
-model.eval()
-with torch.no_grad():
-    pred_scaled = model(batch).cpu().numpy()
-prediction = target_scaler.inverse_transform(
-    pred_scaled.astype(np.float64)
-)[0, 0]
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python,caption={Luồng suy luận tương ứng bằng Keras.}]
-window_scaled = feature_scaler.transform(window_raw)
-batch = window_scaled[None, :, :].astype(np.float32)
-pred_scaled = model.predict(batch, verbose=0)
-prediction = target_scaler.inverse_transform(
-    pred_scaled.astype(np.float64)
-)[0, 0]
-\end{lstlisting}
-
-Hai đoạn mã mô tả phép suy luận từ cửa sổ đầu vào đã đủ dữ liệu. Chúng dùng lại mô hình và scaler trong phiên chạy. Phiên bản hiện tại chưa lưu đầy đủ gói mô hình cùng scaler để khởi động một dịch vụ độc lập, chưa có API/web và chưa có kết quả kiểm thử trên máy chủ triển khai. Nội dung các mục tiếp theo là thiết kế cho bước đóng gói đó.
-
-\section{Các thành phần của một gói dự báo}
-Một gói dự báo phải bảo toàn cả mô hình và phép biến đổi dữ liệu. Chỉ giữ trọng số sẽ không đủ để tái tạo dự báo ở đơn vị gốc. Cấu hình đóng gói đề xuất gồm các thành phần trong Bảng~\ref{tab:deployment-artifacts}.
-
-\begin{table}[H]\centering\small
-\caption{Thành phần của gói triển khai đề xuất}\label{tab:deployment-artifacts}
-\begin{tabularx}{\linewidth}{@{}p{3.5cm}Y@{}}\toprule
-Thành phần & Nội dung cần bảo toàn \\\midrule
-Trọng số mô hình & Trọng số tại epoch tốt nhất theo Validation, gắn với framework và kiến trúc \\
-Kiến trúc & Input size, hidden size, số tầng, kích hoạt và đầu ra \\
-Feature scaler & Cực trị hoặc tham số MinMax đã fit trên Train \\
-Target scaler & Phép đổi từ dự báo chuẩn hóa về USD/GBP \\
-Thứ tự đặc trưng & OHLCV hoặc bốn biến bán lẻ, đúng thứ tự khi huấn luyện \\
-Quy tắc thời gian & Độ dài cửa sổ, thứ tự tăng dần, một bước theo quan sát \\
-Định nghĩa mục tiêu & Close AAPL hoặc doanh số các dòng bán dương \\
-Metadata & Phiên bản thư viện, mốc Train/Validation, epoch được chọn \\\bottomrule
-\end{tabularx}
-\end{table}
-
-Tên framework là một phần định danh gói vì trạng thái trọng số của PyTorch và Keras không dùng thay thế trực tiếp cho nhau. Mỗi bài toán cũng phải dùng scaler tương ứng; scaler của AAPL không có ý nghĩa với doanh số bán lẻ. Ngay trong một bài toán, hoán đổi thứ tự cột khi suy luận sẽ thay đổi phép tính dù shape tensor vẫn hợp lệ.
-
-\section{Dữ liệu đầu vào và kết quả trả về}
-Đối với AAPL, một yêu cầu dự báo cần 20 phiên hoàn chỉnh theo thời gian với năm giá trị \texttt{open, high, low, close, volume} tại mỗi phiên. Đối với bán lẻ, cần 14 ngày quan sát với \texttt{daily\_revenue, daily\_quantity, transaction\_count, avg\_order\_value}, được tổng hợp theo cùng điều kiện lọc như lúc huấn luyện.
-
-Lớp tiếp nhận dữ liệu sẽ kiểm tra số quan sát, số đặc trưng, giá trị hữu hạn, ngày không trùng và thứ tự thời gian. Với dữ liệu giao dịch thô, bước tổng hợp phải hoàn thành trước khi tạo cửa sổ. Scaler chỉ được gọi \texttt{transform} trong suy luận; fit lại trên cửa sổ mới sẽ thay đổi ý nghĩa các đầu vào so với trọng số đã học.
-
-Kết quả đề xuất gồm giá trị dự báo, đơn vị, thời điểm cuối của lịch sử, khoảng dự báo một bước và định danh phiên bản mô hình. Với bán lẻ, mô hình hiện dự báo ngày quan sát tiếp theo, nên dữ liệu lịch hoạt động phải được bổ sung nếu ứng dụng cần trả một ngày lịch cụ thể. Gán mặc định ngày kế tiếp trên lịch sẽ không tương ứng với chuỗi đã huấn luyện.
+Ứng dụng sử dụng dữ liệu lịch sử AAPL và Online Retail II đã chuẩn bị trong bài. Mỗi lần dự báo trả một giá trị cho quan sát kế tiếp. Không có nguồn giá trực tiếp, cơ chế đặt lệnh, dự báo nhiều bước tự hồi quy hoặc huấn luyện lại khi khởi động. Cấu hình Render được cung cấp để chuyển ứng dụng lên Web Service; kết quả và ảnh trong chương này đều thuộc phiên triển khai cục bộ.
 
 \begin{figure}[H]\centering
 \begin{tikzpicture}[
   box/.style={draw,rounded corners,align=center,minimum width=6.4cm,minimum height=0.9cm,font=\small},
   link/.style={-Latex,thick},node distance=0.45cm]
-\node[box] (a) {Nhận lịch sử và kiểm tra dữ liệu};
-\node[box,below=of a] (b) {Sắp xếp, tổng hợp và chọn đúng đặc trưng};
+\node[box] (a) {Trình duyệt: bài toán, framework, ngày Test hoặc CSV};
+\node[box,below=of a] (b) {FastAPI: kiểm tra yêu cầu và chọn cửa sổ lịch sử};
 \node[box,below=of b] (c) {MinMax theo tham số Train, tạo $(1,L,D)$};
-\node[box,below=of c] (d) {RNN với trọng số Validation tốt nhất};
-\node[box,below=of d] (e) {Inverse transform và trả dự báo cùng metadata};
+\node[box,below=of c] (d) {Checkpoint PyTorch hoặc Keras đã nạp trên CPU};
+\node[box,below=of d] (e) {Khôi phục đơn vị, trả JSON và hiển thị kết quả};
 \draw[link] (a)--(b);\draw[link] (b)--(c);\draw[link] (c)--(d);\draw[link] (d)--(e);
 \end{tikzpicture}
-\caption{Luồng xử lý của dịch vụ dự báo được đề xuất.}\label{fig:deploy-flow}
+\caption{Luồng suy luận của ứng dụng đã triển khai cục bộ.}\label{fig:deploy-flow}
 \end{figure}
 
-\section{Kiểm thử khi đóng gói và vận hành}
-Phép kiểm thử đầu tiên là lấy một cửa sổ Test cố định, so sánh dự báo trong notebook với dự báo sau khi lưu và nạp lại toàn bộ gói. Dự báo cần khớp trong sai số số học đã chọn; các bước chuẩn hóa và khôi phục đơn vị phải giữ nguyên. So sánh cả đầu ra chuẩn hóa lẫn giá trị gốc giúp xác định lỗi phát sinh ở mô hình hay ở scaler.
+\section{Đóng gói và nạp lại mô hình}
+\subsection{Xuất trọng số từ notebook}
+Tệp \path{scripts/export_models.py} thực thi các notebook 01--04 trong bộ nhớ, sau đó bổ sung một cell xuất kết quả. Tiến trình kernel dùng cùng Python với lệnh gọi script. Các notebook gốc không bị ghi đè. Nhờ sử dụng chính mã huấn luyện và lựa chọn checkpoint trong notebook, bước đóng gói giữ nguyên quy trình chọn trọng số theo Validation.
 
-Tiếp theo là các trường hợp thiếu bước thời gian, thiếu cột, cột sai thứ tự, NaN, dữ liệu ngày lặp và lịch sử không tăng dần. Giao diện phải phản hồi rõ dữ liệu không hợp lệ thay vì tự tạo đầu vào khác với quy tắc huấn luyện. Một yêu cầu đúng shape nhưng sai thứ tự cột là ví dụ cho thấy kiểm tra kích thước chưa đủ.
+Bốn gói được đặt trong \path{artifacts/stock_pytorch}, \path{artifacts/stock_keras}, \path{artifacts/retail_pytorch} và \path{artifacts/retail_keras}. Lần xuất trên cùng môi trường khôi phục đúng epoch tốt nhất: 100 và 4 đối với AAPL, 100 và 28 đối với bán lẻ, theo thứ tự PyTorch và Keras. Các chỉ số Test trùng với kết quả thực nghiệm trước khi đóng gói.
 
-Sau triển khai, MAE và độ chệch được tính khi giá trị thực tế xuất hiện. Tỷ lệ đầu vào vượt cực trị Train có thể dùng để theo dõi dịch chuyển phân bố, cùng với tần suất lỗi dữ liệu và thời gian phản hồi. Những chỉ số vận hành này chưa được đo trong phạm vi notebook hiện tại.
+\begin{table}[H]\centering\small
+\caption{Các tệp trong gói mô hình đã xuất}\label{tab:deployment-artifacts}
+\begin{tabularx}{\linewidth}{@{}p{3.6cm}Y@{}}\toprule
+Tệp & Vai trò trong ứng dụng \\\midrule
+\path{model.pt} & State dictionary của PyTorch; nạp vào đúng kiến trúc RNN và tầng tuyến tính \\
+\path{model.keras} & Mô hình Keras; nạp với \texttt{compile=False} cho suy luận \\
+\path{scalers.json} & Hệ số nhân, độ lệch MinMax; cực trị Train để phát hiện đầu vào ngoài miền \\
+\path{metadata.json} & Thứ tự đặc trưng, cửa sổ, số tham số, epoch, phiên bản, hash notebook và chỉ số \\
+\path{reference.npz} & Dữ liệu Test gốc, ngày, nhãn, dự báo và baseline để đối chiếu \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Hai tệp \path{samples/stock.csv} và \path{samples/retail.csv} chứa lần lượt 190 và 92 dòng lịch sử Test trước tạo cửa sổ. Chúng phục vụ lựa chọn ngày, tải dữ liệu mẫu và thử dự báo từ CSV. Các tệp mẫu bán lẻ chỉ chứa giá trị tổng hợp theo ngày.
+
+\subsection{Bảo toàn phép chuẩn hóa khi suy luận}
+Với hệ số MinMax đã lưu, đặc trưng thứ $j$ được biến đổi theo $z_j=x_j s_j+b_j$. Đầu ra được đưa về đơn vị gốc bằng $\widehat{y}=(\widehat{z}-b_y)/s_y$. Hệ số được lấy từ scaler fit trên Train; dịch vụ không ước lượng lại chúng từ CSV hoặc tập Test. Phép nhân và cộng thực hiện ở float64, sau đó tensor đầu vào chuyển về float32 theo mô hình. Kết quả chuẩn hóa được chuyển lại float64 trước khi khôi phục USD hoặc GBP.
+
+PyTorch nạp trọng số trên CPU với \texttt{weights\_only=True}, đặt \texttt{eval()} và thực hiện dự báo trong \texttt{torch.inference\_mode()}. Keras gọi mô hình với \texttt{training=False}. Khi khởi động, ứng dụng nạp và làm nóng cả bốn mô hình. Mỗi mô hình có khóa riêng cho đoạn suy luận; cấu hình chạy sử dụng một worker Uvicorn để tránh nhân bản bộ nhớ của hai framework.
+
+\section{Khởi chạy và giao tiếp API}
+\subsection{Các bước triển khai cục bộ}
+Sau khi tạo môi trường Python và cài \path{requirements-app.txt}, ứng dụng được khởi động từ thư mục gốc Assignment 06 bằng các lệnh sau. Checkpoint đã xuất được sử dụng trực tiếp nên không cần chạy lại huấn luyện khi mở demo.
+
+\begin{lstlisting}[language={},caption={Cài đặt và khởi chạy ứng dụng cục bộ trên Windows.}]
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-app.txt
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8006 --workers 1
+\end{lstlisting}
+Trong lệnh khởi chạy, các tham số từ \texttt{--host} đến \texttt{--workers} nằm trên cùng một dòng với \texttt{uvicorn}. Khi Uvicorn thông báo hoàn tất startup, \path{/api/health} trả trạng thái sẵn sàng và danh sách bốn mô hình. Giao diện hiển thị cùng trạng thái ở góc trên bên phải. Uvicorn phục vụ ứng dụng ASGI theo cơ chế được mô tả trong tài liệu FastAPI~\cite{fastapi-deploy}.
+
+\begin{table}[H]\centering\small
+\caption{Các endpoint phục vụ giao diện}\label{tab:api-endpoints}
+\begin{tabularx}{\linewidth}{@{}p{1.2cm}p{6.1cm}Y@{}}\toprule
+Lệnh & Đường dẫn & Chức năng \\\midrule
+GET & \path{/api/health} & Kiểm tra trạng thái mô hình \\
+GET & \path{/api/catalog} & Lấy metadata và ngày Test \\
+GET & \path|/api/sample/{dataset}| & Tải CSV lịch sử mẫu \\
+POST & \path{/api/predict} & Dự báo từ ngày Test hoặc CSV \\
+GET & \path|/api/evaluate/{dataset}/{framework}| & Đánh giá toàn bộ Test \\\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Yêu cầu dự báo và quy tắc dữ liệu}
+Một yêu cầu mẫu gồm \texttt{dataset=stock}, \texttt{framework=pytorch} và \texttt{target\_date=2018-02-07}. Với CSV riêng, yêu cầu gửi \texttt{csv\_text} thay cho ngày Test. API từ chối yêu cầu chứa đồng thời hai nguồn. Response gồm dự báo, đơn vị, baseline, nhãn thực nếu có, sai số tuyệt đối, phạm vi cửa sổ và thời gian suy luận.
+
+CSV AAPL phải có các cột \texttt{date, open, high, low, close, volume}; CSV bán lẻ có \texttt{date, daily\_revenue, daily\_quantity, transaction\_count, avg\_order\_value}. Thứ tự cột phải khớp metadata. Đầu vào cần ít nhất 20 hoặc 14 dòng tương ứng, tối đa 2,000 dòng. Giao diện giới hạn tệp ở 250 KB; API giới hạn trường nội dung CSV ở 250,000 ký tự.
+
+Ngày phải hợp lệ, tăng dần và không trùng. Các đặc trưng phải hữu hạn và không âm; giá OHLC phải dương, High không thấp hơn các giá còn lại và Low không cao hơn chúng. Số hóa đơn phải là số nguyên dương; giá trị đơn hàng bình quân phải phù hợp với doanh số chia số hóa đơn. Lỗi dữ liệu trả HTTP 400, còn lỗi schema như framework không tồn tại trả HTTP 422. Dữ liệu CSV được xử lý trong request và không ghi thành tệp trên máy chủ.
+
+\section{Demo giao diện và phân tích kết quả}
+\subsection{Bố cục và thao tác}
+Hình~\ref{fig:demo-overview} ghi lại trang chính khi chọn AAPL và PyTorch. Cột trái chứa bài toán, framework, thông tin mô hình, nguồn dữ liệu và nút chạy. Vùng kết quả hiển thị ba giá trị: dự báo RNN, quan sát gần nhất dùng làm persistence và nhãn thực để đối chiếu. Phía dưới là khoảng thời gian đầu vào, cảnh báo vượt vùng Train, biểu đồ Test cùng MAE, RMSE, MAPE và $R^2$.
+
+\codefigure{demo_overview.png}{Giao diện RNN Forecast Lab chạy cục bộ với AAPL và PyTorch.}{fig:demo-overview}
+
+Chọn ngày Test làm thay đổi cửa sổ dự báo một bước. Biểu đồ và chỉ số phía dưới luôn mô tả toàn bộ tập Test lịch sử, kể cả khi tải CSV riêng. Dòng chú thích trên giao diện thể hiện phạm vi này để tránh gán chỉ số lịch sử cho một đầu vào mới. Đường xanh biểu diễn thực tế, đường đỏ biểu diễn RNN và đường xám biểu diễn persistence.
+
+\subsection{Dự báo AAPL bằng PyTorch và Keras}
+Hai phiên demo AAPL cùng chọn ngày 07/02/2018. Cửa sổ gồm 20 phiên từ 09/01/2018 đến 06/02/2018; giá đóng cửa ngày đích không nằm trong đầu vào. Giá trị thực là 159.54 USD và persistence là 163.03 USD.
+
+\codefigure{demo_stock_pytorch.png}{Kết quả AAPL với PyTorch tại ngày Test 07/02/2018.}{fig:demo-stock-torch}
+
+PyTorch dự báo 152.04 USD, sai số tuyệt đối 7.50 USD. Trên toàn bộ 170 mẫu Test, MAE là 7.43 USD và RMSE là 8.09 USD. Đường dự báo nằm thấp hơn phần lớn chuỗi thực tế, phù hợp với phân tích độ chệch ở Chương~\ref{chap:results}. Tại cửa sổ được chọn, 80/100 giá trị đặc trưng nằm ngoài cực trị Train; ứng dụng thông báo nhưng vẫn áp dụng nguyên phép chuẩn hóa đã lưu.
+
+\codefigure{demo_stock_keras.png}{Kết quả AAPL với Keras tại cùng ngày và cùng lịch sử đầu vào.}{fig:demo-stock-keras}
+
+Keras dự báo 148.41 USD, sai số tuyệt đối 11.13 USD. MAE Test 13.68 USD lớn hơn PyTorch và persistence; $R^2=-1.1612$ phản ánh mức độ sai lệch trên giai đoạn này. Riêng ngày được chọn, persistence có sai số 3.49 USD, nhỏ hơn cả hai RNN. Demo xác nhận các mô hình được gọi thành công và các giới hạn dự báo vẫn xuất hiện khi chuyển từ notebook sang ứng dụng.
+
+\subsection{Dự báo bán lẻ bằng PyTorch và Keras}
+Hai phiên bán lẻ cùng chọn ngày 09/12/2011. Cửa sổ có 14 quan sát từ 23/11/2011 đến 08/12/2011, không bao gồm nhãn ngày 09/12. Persistence là 82,371.55 GBP, trong khi doanh số dương thực tế của ngày đích lên tới 200,918.98 GBP.
+
+\codefigure{demo_retail_pytorch.png}{Kết quả Online Retail II với PyTorch tại ngày 09/12/2011.}{fig:demo-retail-torch}
+
+PyTorch dự báo 49,626.04 GBP và có sai số tuyệt đối 151,292.94 GBP ở ngày này. Dù MAE toàn tập giảm 29.86\% so với persistence, đường dự báo có biên độ nhỏ hơn nhiều so với đỉnh thực tế. Điều này cho thấy mức cải thiện trung bình không đồng nghĩa với khả năng dự đoán chính xác một đơn hàng đột biến.
+
+\codefigure{demo_retail_keras.png}{Kết quả Online Retail II với Keras trên cùng ngày Test.}{fig:demo-retail-keras}
+
+Keras dự báo 47,670.13 GBP, sai số tuyệt đối 153,248.85 GBP. MAPE Test thấp hơn PyTorch nhưng MAE và RMSE cao hơn. Cả hai giao diện đều thể hiện đỉnh ngày cuối mà RNN không theo kịp. Đỉnh này chịu ảnh hưởng của quy tắc giữ giao dịch bán dương và loại giao dịch hủy, đã phân tích trong chương kết quả. Các giá trị trên giao diện là doanh số theo định nghĩa đó, không phải doanh thu thuần.
+
+\subsection{Tải CSV và dự báo quan sát kế tiếp}
+Hình~\ref{fig:demo-csv} được chụp sau khi tải \path{samples/retail.csv} và chạy PyTorch. Ứng dụng lấy 14 dòng cuối, từ 24/11/2011 đến 09/12/2011, để dự báo quan sát sau dòng cuối. Khác với chế độ chọn ngày Test, ở đây doanh số 200,918.98 GBP đã thuộc lịch sử đầu vào và trở thành giá trị persistence.
+
+\codefigure{demo_csv.png}{Tải CSV bán lẻ và dự báo quan sát kế tiếp bằng PyTorch.}{fig:demo-csv}
+
+Dự báo nhận được là 31,906.92 GBP. Dữ liệu tải lên không có nhãn cho quan sát tiếp theo, nên ô thực tế và sai số không có giá trị; ứng dụng cũng không tự gán một ngày lịch tương lai. Thông báo 2/56 giá trị vượt miền Train mô tả cửa sổ mới. Biểu đồ và MAE phía dưới vẫn là kết quả Test lịch sử, không cung cấp bằng chứng về sai số của dự báo 31,906.92 GBP.
+
+\subsection{Phản hồi khi dữ liệu không hợp lệ}
+Trong Hình~\ref{fig:demo-validation}, nội dung CSV bán lẻ chưa đủ số dòng quan sát. API trả HTTP 400 với thông báo yêu cầu từ 14 đến 2,000 dòng. Giao diện xóa kết quả cũ và hiển thị lỗi, tránh để một dự báo trước đó xuất hiện như kết quả của dữ liệu vừa nhập. Dữ liệu không đủ cửa sổ không được tự đệm bằng số 0 hoặc lặp dòng cuối.
+
+\codefigure{demo_validation.png}{Giao diện từ chối CSV không đủ số quan sát.}{fig:demo-validation}
+
+\section{Đối chiếu dự báo và kiểm thử dịch vụ}
+\subsection{Kết quả kiểm tra tính nhất quán}
+Tệp \path{scripts/smoke_test.py} gọi dịch vụ qua HTTP và đối chiếu đầu ra với \path{reference.npz} được xuất từ notebook. Lần chạy ngày 30/09/2026 đạt 41 kiểm tra, gồm toàn bộ 496 dự báo Test của bốn mô hình, ngày nhãn, nhãn thực, baseline, cửa sổ đầu/giữa/cuối, dự báo CSV, các endpoint chính và 12 trường hợp dữ liệu không hợp lệ. Hash nguồn notebook cũng được kiểm tra so với metadata.
+
+\begin{table}[H]\centering\small
+\caption{Sai khác lớn nhất giữa dự báo API và dự báo khi xuất mô hình}\label{tab:api-parity}
+\begin{tabular}{@{}llrr@{}}\toprule
+Dữ liệu & Framework & Số mẫu & Sai khác tuyệt đối lớn nhất \\\midrule
+AAPL & PyTorch & 170 & 0.000000 USD \\
+AAPL & Keras & 170 & 0.000028 USD \\
+Bán lẻ & PyTorch & 78 & 0.000000 GBP \\
+Bán lẻ & Keras & 78 & 0.027514 GBP \\\bottomrule
+\end{tabular}
+\end{table}
+
+Ngưỡng kiểm tra là 0.05 đơn vị tiền cho mỗi dự báo. Sai khác nhỏ của Keras xuất hiện giữa đường gọi suy luận trong dịch vụ và \texttt{predict()} theo batch khi xuất. Vì thế, đầu ra Keras được kiểm tra bằng dung sai số học thay vì yêu cầu đồng nhất từng bit. Các chỉ số tiền tệ vẫn khớp khi làm tròn hai chữ số.
+
+Mười hai ca lỗi gồm thiếu dòng, thiếu cột, ngày trùng, ngày đảo thứ tự, NaN, khối lượng âm, OHLC không hợp lệ, AOV không khớp, framework không tồn tại, ngày Test không tồn tại, gửi đồng thời hai nguồn và CSV vượt giới hạn ký tự. Các ca này trả đúng nhóm HTTP 400 hoặc 422; không tạo dự báo từ dữ liệu không hợp lệ. Kết quả chi tiết được lưu trong \path{artifacts/verification.json}.
+
+\subsection{Thời gian phản hồi cục bộ}
+Sau làm nóng, mỗi mô hình được gọi 10 lần liên tiếp bằng yêu cầu dự báo một cửa sổ. Thời gian HTTP đo ở phía client; thời gian suy luận đo trong hàm dự báo của server. Phép đo chạy trên máy cục bộ, một worker, không có tải đồng thời.
+
+\begin{table}[H]\centering\small
+\caption{Thời gian dự báo cục bộ sau làm nóng, đơn vị ms}\label{tab:api-latency}
+\begin{tabular}{@{}llrrr@{}}\toprule
+Dữ liệu & Framework & HTTP median & HTTP P95 & Suy luận median \\\midrule
+AAPL & PyTorch & 5.66 & 6.76 & 0.66 \\
+AAPL & Keras & 51.30 & 104.08 & 45.10 \\
+Bán lẻ & PyTorch & 5.65 & 6.16 & 0.62 \\
+Bán lẻ & Keras & 53.47 & 66.65 & 45.86 \\\bottomrule
+\end{tabular}
+\end{table}
+
+Các thời gian này đủ ngắn cho thao tác thử từng cửa sổ trên giao diện. Chênh lệch quan sát được phụ thuộc đường suy luận, cấu hình thư viện và môi trường đo; 10 request tuần tự chưa tạo thành benchmark tổng quát giữa hai framework. Phép đo không bao gồm tải thư viện và checkpoint lúc khởi động, cũng chưa mô tả năng lực phục vụ nhiều người dùng.
+
+\section{Cấu hình triển khai lên Render}
+\subsection{Các thiết lập đã chuẩn bị}
+Tệp \path{render.yaml} khai báo một Python Web Service, build bằng \texttt{pip install -r requirements-app.txt} và chạy Uvicorn trên \texttt{0.0.0.0} với cổng \texttt{\$PORT}. Cấu hình health check sử dụng \path{/api/health}; tự động deploy được tắt bằng \texttt{autoDeployTrigger: off}. Cách khai báo tương ứng với hướng dẫn FastAPI và Blueprint của Render~\cite{render-fastapi,render-blueprint}.
+
+Repository triển khai dự kiến là \url{https://github.com/anhducwszxje/Assignment06.git}. Khi dùng kho Assignment06 độc lập, Root Directory để trống. Các tệp bắt buộc gồm \path{app/}, \path{artifacts/}, \path{samples/}, \path{requirements-app.txt}, \path{.python-version} và \path{render.yaml}. Môi trường Linux sử dụng dependency CPU của PyTorch và TensorFlow; checkpoint được đưa cùng mã nguồn, không huấn luyện hoặc tải lại dữ liệu gốc trong startup.
+
+\begin{lstlisting}[language={},caption={Lệnh khởi động Web Service được khai báo cho Render.}]
+python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+\end{lstlisting}
+
+Blueprint hiện chọn \texttt{plan: standard}, là gói trả phí; chưa có dịch vụ nào được kích hoạt trong phiên thực hiện này. Hai framework cùng nạp trong một tiến trình có chi phí bộ nhớ đáng kể. Một lần quan sát tiến trình Windows sau chạy demo ghi nhận working set khoảng 542 MiB và private memory khoảng 1,028 MiB. Đây là hai thước đo bộ nhớ khác nhau trên Windows, không phải mức tài nguyên bảo đảm cho Render. Cấu hình một worker hạn chế việc nạp lặp mô hình khi chuyển môi trường.
+
+\subsection{Trình tự kiểm tra khi triển khai công khai}
+Sau khi đưa mã nguồn và checkpoint lên repository, có thể tạo Blueprint từ \path{render.yaml}, kiểm tra gói tài nguyên, rồi theo dõi build và startup. Khi Render cấp URL, trình tự xác nhận gồm gọi health check, mở giao diện, dự báo cả bốn cấu hình, thử CSV hợp lệ và không hợp lệ, sau đó chạy \path{scripts/smoke_test.py} với \texttt{--base-url} trỏ tới URL đó.
+
+Ở thời điểm lập báo cáo, ứng dụng đã được chạy và kiểm thử trên Windows cục bộ; chưa có kết quả build Linux, URL Render hoặc phép đo trên máy chủ công khai. Xác thực truy cập, giới hạn tần suất và kiểm thử tải đồng thời là các hạng mục vận hành tiếp theo. Việc chuyển sang Render cần xác nhận lại sự tương thích dependency, bộ nhớ và dung sai suy luận bằng cùng bộ kiểm tra trước khi sử dụng các số đo máy chủ.
+
 
 \chapter{Kết luận}
 \label{chap:conclusion}
@@ -1034,7 +1125,7 @@ Trên AAPL, PyTorch RNN đạt MAE 7.43 USD và Keras SimpleRNN đạt 13.68 USD
 Trên doanh số bán lẻ, PyTorch đạt MAE 15,567.14 GBP và Keras đạt 15,954.78 GBP, giảm tương ứng khoảng 29.86\% và 28.11\% so với baseline. Tuy nhiên, $R^2$ gần 0 và sai số ở các đỉnh vẫn lớn. Đặc biệt, cặp bán và hủy ngày 09/12/2011 cho thấy định nghĩa mục tiêu tác động trực tiếp đến diễn giải chất lượng dự báo.
 
 \section{Phạm vi hoàn thành và bước phát triển tiếp theo}
-Phần cài đặt hiện hoàn thành huấn luyện, lựa chọn trọng số và dự báo Test cho cả PyTorch và Keras. Quy trình suy luận một cửa sổ đã được xác định cùng các thành phần của gói triển khai. Ứng dụng phục vụ độc lập, lưu/nạp đầy đủ mô hình và kiểm thử dịch vụ là phần phát triển tiếp theo.
+Phần cài đặt hoàn thành huấn luyện, lựa chọn trọng số và dự báo Test cho cả PyTorch và Keras. Bốn mô hình cùng tham số chuẩn hóa được lưu, nạp lại trong FastAPI và sử dụng qua giao diện web cục bộ. Bộ kiểm thử dịch vụ đạt 41 kiểm tra, đối chiếu 496 dự báo Test và xác nhận phản hồi cho các đầu vào không hợp lệ. Cấu hình Render đã được chuẩn bị; build Linux, triển khai công khai và kiểm thử tải là các bước tiếp theo.
 
 Ưu tiên cải thiện mô hình xuất phát từ các lỗi đã đo: giảm độ chệch trên chuỗi giá tăng, xử lý định nghĩa doanh số có giao dịch hủy, bổ sung thông tin lịch và kiểm tra qua nhiều giai đoạn. Baseline giữ vai trò mốc so sánh xuyên suốt. Mức cải thiện chỉ có ý nghĩa khi được đánh giá trên cùng nhãn, cùng thời điểm phát sinh dự báo và cùng định nghĩa mục tiêu.
 
@@ -1061,6 +1152,8 @@ nbformat / nbclient & 5.11.1 / 0.11.0 \\\bottomrule
 
 Danh sách phụ thuộc được lưu trong \path{requirements.txt} của Assignment 06. Các notebook huấn luyện đọc CSV; tệp Excel được giữ làm bản dữ liệu đi kèm. Môi trường thực nghiệm sử dụng CPU. Khác biệt thư viện, backend hoặc thiết bị có thể dẫn đến sai khác số học khi chạy lại, ngay cả khi cố định seed.
 
+Môi trường ứng dụng bổ sung FastAPI 0.142.2, Uvicorn 0.54.0 và HTTPX 0.28.1 cho kiểm thử. Các dependency ứng dụng và kiểm thử nằm trong \path{requirements-app.txt} và \path{requirements-test.txt}.
+
 \section{Tệp mã nguồn tương ứng}
 \begin{table}[H]\centering\small
 \caption{Tên đầy đủ của các notebook}\label{tab:source-files}
@@ -1078,12 +1171,14 @@ Mã nguồn dự án: \url{https://github.com/anhducwszxje/Assignment06.git}.
 
 Notebook 00 chạy các minh họa nền tảng. Bốn notebook còn lại có thể được thực thi độc lập với dữ liệu trong thư mục \path{dataset}. Chuỗi bước trong từng notebook là nạp dữ liệu, mô tả và làm sạch, chia thời gian, chuẩn hóa, tạo cửa sổ, xây dựng mô hình, huấn luyện và đánh giá. Khi chạy lại, thực thi theo thứ tự cell từ đầu bảo đảm scaler, mô hình và các mảng dự báo thuộc cùng một phiên.
 
+Ứng dụng được tổ chức trong \path{app/main.py}, \path{app/inference.py} và \path{app/static/}. Hai script \path{scripts/export_models.py} và \path{scripts/smoke_test.py} thực hiện xuất mô hình và kiểm thử HTTP. Tệp \path{README.md} hướng dẫn cài đặt, chạy notebook, mở demo, định dạng CSV, kiểm thử và thiết lập Render.
+
 \section{Kiểm tra tính nhất quán của kết quả}
 Năm notebook có tổng cộng 81 cell mã; toàn bộ đã thực thi có output và không có cell lỗi trong lần chạy dùng cho báo cáo. Các cặp framework có cùng số mẫu, ngày nhãn, giá trị thực tế và dự báo baseline trên từng bài toán. MAE, MSE và RMSE đã được tính đối chiếu từ mảng dự báo và nhãn thực tế.
 
 Trọng số PyTorch được chọn ở epoch có Validation loss nhỏ nhất; Keras khôi phục best weights qua EarlyStopping. Kết quả inverse-transform được so với nhãn gốc ở đơn vị tiền. Các biểu đồ trong các chương dữ liệu và thực nghiệm được trích từ output notebook; số liệu trong bảng giữ thêm độ chính xác khi tính và chỉ làm tròn ở bước trình bày.
 
-Các kiểm tra này xác nhận sự nhất quán của phép tính và báo cáo kết quả. Chúng không thay thế đánh giá trên dữ liệu mới, nhiều seed hoặc thử nghiệm vận hành sau khi đóng gói dịch vụ.
+Đối với ứng dụng, các mảng tham chiếu và hash notebook được lưu cùng checkpoint. Bộ kiểm thử HTTP xác nhận sai khác dự báo sau nạp lại nằm trong ngưỡng 0.05 đơn vị tiền, đồng thời kiểm tra ngày, nhãn thực và baseline. Các kiểm tra này xác nhận sự nhất quán từ notebook đến dịch vụ cục bộ; đánh giá trên dữ liệu mới, nhiều seed và máy chủ công khai vẫn có phạm vi riêng.
 
 \clearpage
 \addcontentsline{toc}{chapter}{Tài liệu tham khảo}
@@ -1099,6 +1194,9 @@ Các kiểm tra này xác nhận sự nhất quán của phép tính và báo c�
 \bibitem{retail} D. Chen, \emph{Online Retail II}, UCI Machine Learning Repository, 2012. DOI: 10.24432/C5CG6D. \url{https://archive.ics.uci.edu/dataset/502/online+retail+ii}.
 \bibitem{minmax} scikit-learn, \emph{MinMaxScaler}. \url{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html}.
 \bibitem{early-stopping} Keras, \emph{EarlyStopping}. \url{https://keras.io/api/callbacks/early_stopping/}.
+\bibitem{fastapi-deploy} FastAPI, \emph{Run a Server Manually}. \url{https://fastapi.tiangolo.com/deployment/manually/}.
+\bibitem{render-fastapi} Render, \emph{Deploy a FastAPI App}. \url{https://render.com/docs/deploy-fastapi}.
+\bibitem{render-blueprint} Render, \emph{Blueprint YAML Reference}. \url{https://render.com/docs/blueprint-spec}.
 \end{thebibliography}
 
 \end{document}
