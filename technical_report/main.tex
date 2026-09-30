@@ -1,0 +1,1104 @@
+\documentclass[12pt,a4paper]{report}
+
+% Prism/Overleaf co the mac dinh dung pdfLaTeX; van giu duong XeLaTeX de co Times New Roman.
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T5]{fontenc}
+  \usepackage[vietnamese]{babel}
+\else
+  \usepackage{fontspec}
+  \defaultfontfeatures{Ligatures=TeX}
+  \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{\setmainfont{TeX Gyre Termes}}
+\fi
+\usepackage[top=2.5cm,bottom=2.5cm,left=3cm,right=2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,array,multirow,longtable}
+\usepackage{float}
+\usepackage{needspace}
+\usepackage{caption,subcaption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc,positioning,arrows.meta}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xurl}
+\usepackage{listings}
+
+\graphicspath{{images/}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% Hinh duoc chen san trong khung de tranh tran trang khi trinh bay bang ket qua.
+\newcommand{\codefigure}[3]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=\linewidth,height=0.65\textheight,keepaspectratio]{images/#1}
+  \caption{#2}\label{#3}
+  \end{figure}}
+\newcommand{\figbao}[3]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=\linewidth,height=0.39\textheight,keepaspectratio]{images/#1}
+  \caption{#2}\label{#3}
+  \end{figure}}
+\newcommand{\figbaorong}[3]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=\linewidth,height=0.48\textheight,keepaspectratio]{images/#1}
+  \caption{#2}\label{#3}
+  \end{figure}}
+
+\hypersetup{
+  unicode=true,
+  colorlinks=true,
+  allcolors=black,
+  pdftitle={Báo cáo Assignment 06 - Recurrent Neural Networks},
+  pdfauthor={Bùi Anh Đức - B23DCCN165}
+}
+\urlstyle{same}
+\setlength{\emergencystretch}{2em}
+\setlength{\headheight}{15pt}
+\setlength{\parskip}{3pt}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+\renewcommand{\arraystretch}{1.15}
+\renewcommand{\chaptername}{Chương}
+\renewcommand{\appendixname}{Phụ lục}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\listfigurename}{DANH MỤC HÌNH VẼ}
+\renewcommand{\listtablename}{DANH MỤC BẢNG BIỂU}
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}{\filleft\Large\chaptertitlename\ \thechapter}
+  {1ex}{\titlerule\vspace{1ex}\filright\LARGE}[\vspace{1ex}\titlerule]
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\itshape PTIT --- Khoa Công nghệ thông tin 1}
+\fancyhead[R]{\footnotesize\itshape Assignment 06: Mạng nơ-ron hồi tiếp}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  frame=single,
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible
+}
+
+\begin{document}
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\IfFileExists{images/ptit_cover_border-v2.png}{\includegraphics[width=\paperwidth,height=\paperheight]{images/ptit_cover_border-v2.png}}{}};
+  \node[anchor=base,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-3.55cm]current page.north west)
+    {\fontsize{14.5pt}{19pt}\selectfont\textbf{HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG}};
+  \node[anchor=base,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-4.52cm]current page.north west)
+    {\fontsize{14.5pt}{19pt}\selectfont\textbf{KHOA CÔNG NGHỆ THÔNG TIN 1}};
+  \node[anchor=base,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-5.44cm]current page.north west)
+    {\fontsize{14.5pt}{19pt}\selectfont\textbf{HỌC PHẦN PHÁT TRIỂN CÁC HỆ THỐNG THÔNG MINH}};
+  \node[anchor=north,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-7.05cm]current page.north west)
+    {\IfFileExists{images/ptit_logo.png}{\includegraphics[width=4.25cm]{images/ptit_logo.png}}{\fbox{\parbox[c][4cm][c]{4cm}{\centering PTIT}}}};
+  \node[anchor=base,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-14.35cm]current page.north west)
+    {\fontsize{18pt}{22pt}\selectfont\textbf{ASSIGNMENT 06}};
+  \node[anchor=base,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-15.30cm]current page.north west)
+    {\fontsize{15pt}{18pt}\selectfont\textbf{ĐỀ TÀI: RECURRENT NEURAL NETWORKS}};
+  \node[anchor=north west,inner sep=0pt]
+    at ([xshift=6.05cm,yshift=-17.30cm]current page.north west)
+    {\fontsize{12pt}{15pt}\selectfont
+     \begin{tabular}{@{}>{\bfseries}p{4.93cm}@{}l@{}}
+       Họ và tên: & Bùi Anh Đức \\[0.32cm]
+       Lớp: & D23CTPM01 \\[0.32cm]
+       Mã sinh viên: & B23DCCN165 \\[0.32cm]
+       Học kỳ: & I năm học 2026 -- 2027 \\[0.32cm]
+       Giảng viên hướng dẫn: & PGS.TS Trần Đình Quế \\[0.32cm]
+     \end{tabular}};
+  \node[anchor=base,inner sep=0pt]
+    at ([xshift=11.0cm,yshift=-27.42cm]current page.north west)
+    {\fontsize{12pt}{15pt}\selectfont\textbf{Hà Nội, tháng 09/2026}};
+\end{tikzpicture}
+\null
+\end{titlepage}
+
+\pagenumbering{roman}
+\begingroup
+\renewcommand{\contentsname}{MỤC LỤC}
+\small\tableofcontents
+\endgroup
+\clearpage
+\listoffigures
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{Giới thiệu bài toán}
+\label{chap:intro}
+
+\section{Mục tiêu và phạm vi thực nghiệm}
+Mạng nơ-ron hồi tiếp (Recurrent Neural Network, RNN) mô hình hóa chuỗi bằng cách cập nhật một trạng thái ẩn theo thứ tự quan sát. Assignment 06 khảo sát cơ chế này từ biểu diễn hàm, phép tính tại từng bước thời gian và lan truyền ngược, sau đó xây dựng mô hình dự báo bằng PyTorch và TensorFlow/Keras. Hai bài toán thực nghiệm là dự báo giá đóng cửa cổ phiếu AAPL và dự báo doanh số bán lẻ trực tuyến từ dữ liệu giao dịch Online Retail II.
+
+Hai tập dữ liệu có cấu trúc thời gian khác nhau. Dữ liệu cổ phiếu ghi nhận các phiên giao dịch, với năm đặc trưng giá và khối lượng. Dữ liệu bán lẻ ghi nhận từng dòng hàng trong hóa đơn, nên phải làm sạch và tổng hợp trước khi đưa vào RNN. Việc sử dụng cả hai bài toán cho phép khảo sát cùng một kiến trúc trên chuỗi mức giá tương đối liên tục và chuỗi doanh số có phân bố lệch phải, nhiều biến động lớn.
+
+Bốn thí nghiệm đều sử dụng Vanilla RNN một tầng, trạng thái ẩn 32 chiều và đầu ra tuyến tính. Mỗi mẫu gồm một cửa sổ quá khứ để dự đoán một giá trị kế tiếp. Dữ liệu được chia theo thời gian; tham số chuẩn hóa chỉ được ước lượng trên tập huấn luyện. Kết quả kiểm thử được đánh giá ở đơn vị gốc và so sánh với mô hình giữ nguyên giá trị quan sát gần nhất, gọi là baseline persistence.
+
+Phạm vi thực nghiệm gồm huấn luyện, chọn trọng số theo validation và suy luận trong notebook. Phần triển khai trình bày luồng suy luận cùng thiết kế đóng gói mô hình; hệ thống hiện chưa có ứng dụng web hoặc API phục vụ độc lập. Các chỉ số trong báo cáo là kết quả kiểm thử ngoại tuyến của bốn mô hình.
+
+\section{Tổ chức nội dung}
+Báo cáo bắt đầu bằng cơ sở toán học của RNN, gồm hàm chuyển trạng thái, hợp hàm, hình dạng tensor, hàm mất mát và thuật toán Backpropagation Through Time. Phần dữ liệu mô tả nguồn, thuộc tính, chất lượng và phân bố của hai tập dữ liệu. Các chương tiếp theo trình bày giao thức dự báo, mã cài đặt, kết quả và phân tích sai số. Chương cuối về triển khai xác định các thành phần cần có để đưa cùng phép biến đổi đã dùng khi huấn luyện vào quá trình suy luận.
+
+
+Ảnh mã nguồn trong báo cáo được trích từ các cell đã thực thi của năm notebook. Dòng đầu mỗi ảnh ghi tên tệp và chỉ số thực thi \texttt{In}; cột bên trái giữ số dòng trong cell. Dấu ba chấm thể hiện khoảng dòng được lược khỏi ảnh, còn những dòng dài được xuống dòng khi hiển thị. Các đoạn giải thích sử dụng đúng tên biến và hàm trong mã nguồn.
+
+\chapter{Cơ sở lý thuyết của mạng RNN}
+\label{chap:theory}
+
+\section{Chuỗi thời gian và bài toán dự báo}
+Một chuỗi đa biến được biểu diễn bởi $x_1,x_2,\ldots,x_N$, trong đó $x_t\in\mathbb{R}^{D}$ là vector gồm $D$ đặc trưng tại quan sát thứ $t$. Chỉ số $t$ thể hiện thứ tự quan sát. Khoảng thời gian thực giữa $t$ và $t+1$ phụ thuộc dữ liệu: hai phiên chứng khoán có thể cách nhau qua cuối tuần; hai ngày có giao dịch bán lẻ cũng có thể không liền nhau trên lịch.
+
+Với độ dài cửa sổ $L$, mẫu dự báo tại thời điểm $t$ có dạng
+\begin{equation}
+X_t=[x_{t-L+1},\ldots,x_t]\in\mathbb{R}^{L\times D},
+\qquad \widehat y_{t+1}=F_\theta(X_t).
+\end{equation}
+$F_\theta$ là hàm dự báo và $\theta$ là các tham số học được. Đối với AAPL, $y_{t+1}$ là giá đóng cửa phiên tiếp theo. Đối với bán lẻ, $y_{t+1}$ là tổng giá trị các dòng bán dương của ngày quan sát tiếp theo. Các đặc trưng của chính thời điểm cần dự báo không xuất hiện trong cửa sổ đầu vào.
+
+Một mạng truyền thẳng cũng có thể nhận các giá trị trễ sau khi làm phẳng cửa sổ. RNN khác ở cách áp dụng lặp lại cùng một phép chuyển trạng thái lên từng phần tử của chuỗi. Cơ chế này thể hiện thứ tự trong quá trình tính toán và dùng chung trọng số giữa các bước. Hiệu quả dự báo vẫn phụ thuộc dữ liệu, cấu hình và quá trình tối ưu.
+
+\section{RNN dưới dạng hàm và hợp hàm}
+\subsection{Hàm chuyển trạng thái}
+Với quy ước vector cột, một bước Vanilla RNN được viết thành
+\begin{align}
+a_t &= W_xx_t+W_hh_{t-1}+b_h,\label{eq:preactivation}\\
+h_t &= \tanh(a_t),\label{eq:hidden}\\
+\widehat y_{t+1} &= W_yh_t+b_y.\label{eq:readout}
+\end{align}
+Trong đó $h_t\in\mathbb{R}^{H}$ là trạng thái ẩn, $W_x\in\mathbb{R}^{H\times D}$, $W_h\in\mathbb{R}^{H\times H}$, $b_h\in\mathbb{R}^{H}$, $W_y\in\mathbb{R}^{1\times H}$ và $b_y\in\mathbb{R}$. Trạng thái ban đầu của mỗi cửa sổ trong các thí nghiệm là vector không.
+
+Đặt $f_\theta(x,h)=\tanh(W_xx+W_hh+b_h)$ và $g_\theta(h)=W_yh+b_y$. Khi cố định đầu vào $x_t$, định nghĩa $f_{x_t}(h)=f_\theta(x_t,h)$. Toàn bộ phép dự báo trên cửa sổ có thể viết thành
+\begin{equation}
+F_\theta(X_t)=g_\theta\circ f_{x_t}\circ f_{x_{t-1}}\circ\cdots\circ f_{x_{t-L+1}}(0).
+\end{equation}
+Mỗi $f_{x_j}$ nhận trạng thái từ bước trước và trả trạng thái cho bước sau. Các hàm này dùng cùng $W_x,W_h,b_h$, nhưng nhận dữ liệu đầu vào khác nhau. Thứ tự hợp hàm nói chung không giao hoán, nên hoán đổi hai quan sát có thể làm thay đổi dự báo.
+
+\subsection{Tham số, siêu tham số và trạng thái}
+Trọng số và bias là tham số học được, nhận gradient từ hàm mất mát. Độ dài cửa sổ, số chiều trạng thái ẩn, batch size và learning rate là siêu tham số do cấu hình thí nghiệm quyết định. Trạng thái $h_t$ là kết quả tính toán phụ thuộc chuỗi đầu vào và trọng số hiện tại; nó không phải một bộ trọng số riêng cho từng thời điểm.
+
+Trong các mô hình của bài, trạng thái được khởi tạo lại ở mỗi cửa sổ. Việc hai cửa sổ chồng lấn không đồng nghĩa trạng thái của cửa sổ trước được chuyển sang cửa sổ sau. Những quan sát lặp lại được mạng tính toán lại từ đầu. Cách thực hiện này tương ứng với dự báo từ một lịch sử hữu hạn có độ dài cố định.
+
+\figbao{nb00_cell08_0.png}{Trải RNN theo thời gian. Các bước sử dụng chung trọng số; trạng thái ẩn truyền thông tin giữa các bước trong cùng chuỗi.}{fig:unroll}
+
+Hình~\ref{fig:unroll} minh họa đầu ra tại nhiều bước để thể hiện cơ chế hồi tiếp. Trong bốn thí nghiệm dự báo, chỉ trạng thái ở bước cuối cửa sổ được đưa qua tầng tuyến tính để tạo một đầu ra. Đây là cấu trúc nhiều đầu vào, một đầu ra (many-to-one).
+
+\section{Ví dụ tính tay và cài đặt NumPy}
+Xét chuỗi một chiều $[1,2,0.5]$, với $W_x=0.5$, $W_h=0.8$, $b_h=0$, $W_y=1.2$, $b_y=0.1$ và $h_0=0$. Ở bước đầu,
+\[
+a_1=0.5\times1+0.8\times0=0.5,\quad
+h_1=\tanh(0.5)\approx0.4621.
+\]
+Ở bước tiếp theo, $a_2=0.5\times2+0.8h_1\approx1.3697$ và $h_2\approx0.8786$. Với $x_3=0.5$, ta có $a_3\approx0.9529$ và $h_3\approx0.7411$. Đầu ra tại mỗi bước được tính bằng $1.2h_t+0.1$.
+
+\begin{table}[H]\centering
+\caption{Kết quả lan truyền xuôi của ví dụ vô hướng}\label{tab:manual}
+\begin{tabular}{@{}rrrrr@{}}\toprule
+$t$ & $x_t$ & $a_t$ & $h_t$ & $1.2h_t+0.1$ \\\midrule
+1 & 1.0000 & 0.5000 & 0.4621 & 0.6545 \\
+2 & 2.0000 & 1.3697 & 0.8786 & 1.1543 \\
+3 & 0.5000 & 0.9529 & 0.7411 & 0.9893 \\\bottomrule
+\end{tabular}
+\end{table}
+
+\codefigure{code_numpy.png}{Mã cập nhật trạng thái và đầu ra RNN trong notebook 00.}{fig:code-numpy}
+
+Hình~\ref{fig:code-numpy} thể hiện trực tiếp ba thành phần của một bước RNN. Các biến \texttt{W\_xh}, \texttt{W\_hh} và \texttt{b\_h} tạo tiền kích hoạt \texttt{z\_t}; \texttt{np.tanh} chuyển nó thành trạng thái mới. Tầng đầu ra dùng \texttt{W\_hy} và \texttt{b\_y}. Lệnh \texttt{h = h\_new} ở dòng 34 đưa trạng thái vừa tính vào vòng lặp kế tiếp, tạo sự phụ thuộc giữa các bước. Nếu bỏ cập nhật này, các đầu ra chỉ còn phụ thuộc từng phần tử đầu vào và cùng trạng thái ban đầu.
+
+
+Code giữ đầy đủ độ chính xác trong các phép tính; bảng chỉ làm tròn khi trình bày. Đầu ra tuyến tính có thể lớn hơn 1 dù trạng thái ẩn thuộc $(-1,1)$. Trong ví dụ, đầu ra ở bước 2 bằng khoảng 1.1543. Tương tự, mô hình dự báo đã chuẩn hóa vẫn có thể trả kết quả ngoài khoảng $[0,1]$.
+
+\section{Hình dạng tensor và đầu ra của các tầng}
+Một mini-batch gồm $B$ cửa sổ được lưu bằng tensor $X\in\mathbb{R}^{B\times L\times D}$. RNN sinh các trạng thái có shape $(B,L,H)$. Sau khi lấy bước cuối, tensor còn $(B,H)$; tầng tuyến tính biến đổi thành $(B,1)$.
+\begin{equation}
+(B,L,D)\longrightarrow(B,L,H)\longrightarrow(B,H)\longrightarrow(B,1).
+\end{equation}
+
+\begin{table}[H]\centering\small
+\caption{Kích thước tensor trong hai bài toán}\label{tab:shapes}
+\begin{tabularx}{\linewidth}{@{}Ycc@{}}\toprule
+Thành phần & AAPL & Online Retail II \\\midrule
+Cửa sổ đầu vào & $(B,20,5)$ & $(B,14,4)$ \\
+Toàn bộ trạng thái ẩn & $(B,20,32)$ & $(B,14,32)$ \\
+Trạng thái cuối & $(B,32)$ & $(B,32)$ \\
+Giá trị dự báo & $(B,1)$ & $(B,1)$ \\
+Batch size cấu hình & 32 & 16 \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Trong PyTorch, \texttt{batch\_first=True} đặt trục batch ở đầu đầu vào và tensor đầu ra theo thời gian. Tensor trạng thái cuối \texttt{h\_n} vẫn có dạng $(K,B,H)$ đối với RNN một chiều có $K$ tầng. Với một tầng, \texttt{out[:, -1, :]} và \texttt{h\_n[0]} trùng nhau. Notebook 00 đã kiểm chứng đẳng thức này bằng tensor thực tế~\cite{torch-rnn}.
+
+Trong Keras, \texttt{SimpleRNN(return\_sequences=False)} trả trực tiếp tensor $(B,H)$. Nếu xếp chồng RNN, tầng đứng trước phải trả toàn bộ chuỗi để tầng sau còn trục thời gian. Mặc định \texttt{stateful=False} phù hợp với cách xử lý từng cửa sổ độc lập trong bài~\cite{keras-rnn}.
+
+\section{Hàm mất mát và cập nhật tham số}
+Trong huấn luyện, đầu ra và nhãn đều ở thang đo MinMax. Với $M$ mẫu, hàm mất mát là
+\begin{equation}
+\mathcal{L}(\theta)=\frac{1}{M}\sum_{i=1}^{M}\left(F_\theta(X_i)-y_i\right)^2.
+\label{eq:mse}
+\end{equation}
+Đạo hàm theo dự báo của mẫu $i$ bằng $2(\widehat y_i-y_i)/M$. Thành phần bình phương khiến sai số lớn đóng góp mạnh hơn vào loss. MSE là hàm lồi theo vector dự báo, nhưng phép hợp với các tầng RNN làm bài toán tối ưu theo trọng số nói chung không lồi.
+
+\figbao{nb00_cell19_1.png}{Minh họa MSE và MAE trong notebook nền tảng. MSE tăng theo bình phương độ lớn sai số, trong khi MAE tăng tuyến tính.}{fig:loss-demo}
+
+Bộ tối ưu Adam sử dụng các ước lượng mômen bậc nhất và bậc hai của gradient:
+\begin{align}
+m_k&=\beta_1m_{k-1}+(1-\beta_1)g_k,\\
+v_k&=\beta_2v_{k-1}+(1-\beta_2)g_k^{\odot2},\\
+\theta_k&=\theta_{k-1}-\alpha\frac{\widehat m_k}{\sqrt{\widehat v_k}+\epsilon}.
+\end{align}
+$\widehat m_k,\widehat v_k$ là các ước lượng đã hiệu chỉnh độ lệch ban đầu. Cả bốn thí nghiệm dùng learning rate $\alpha=0.001$. Adam điều chỉnh bước cập nhật theo từng tham số; việc dùng Adam không bảo đảm đạt cực tiểu toàn cục~\cite{adam}.
+
+\section{Lan truyền ngược qua thời gian}
+\subsection{Đạo hàm qua một bước hồi tiếp}
+Đặt $D_t=\operatorname{diag}(1-h_t^{\odot2})$. Từ công thức~\eqref{eq:hidden}, Jacobian của trạng thái mới theo trạng thái trước là
+\begin{equation}
+J_t=\frac{\partial h_t}{\partial h_{t-1}}=D_tW_h.
+\label{eq:jacobian}
+\end{equation}
+Thứ tự nhân ma trận xuất phát từ quy tắc dây chuyền: đầu tiên biến đổi affine theo $h_{t-1}$, sau đó áp dụng đạo hàm của $\tanh$ theo từng tọa độ. Nói chung $D_tW_h\ne W_hD_t$.
+
+Với mất mát chỉ tại đầu ra cuối chuỗi, đặt $g_t=\partial\mathcal{L}/\partial h_t$. Ta có
+\begin{align}
+g_L&=W_y^T\frac{\partial\mathcal{L}}{\partial\widehat y},\\
+g_t&=J_{t+1}^Tg_{t+1}
+     =W_h^TD_{t+1}g_{t+1},\quad t=L-1,\ldots,1.
+\end{align}
+Gọi $\delta_t=D_tg_t$, gradient đối với các tham số dùng chung là tổng đóng góp qua tất cả các bước:
+\begin{align}
+\frac{\partial\mathcal{L}}{\partial W_h}&=\sum_{t=1}^{L}\delta_th_{t-1}^T,&
+\frac{\partial\mathcal{L}}{\partial W_x}&=\sum_{t=1}^{L}\delta_tx_t^T,\\
+\frac{\partial\mathcal{L}}{\partial b_h}&=\sum_{t=1}^{L}\delta_t,&
+\frac{\partial\mathcal{L}}{\partial W_y}&=\frac{\partial\mathcal{L}}{\partial\widehat y}h_L^T.
+\end{align}
+Nếu có mất mát tại nhiều bước, $g_t$ còn nhận thêm gradient trực tiếp từ đầu ra tại bước $t$. Bốn mô hình dự báo trong bài dùng mất mát ở đầu ra cuối nên không có thành phần bổ sung đó.
+
+\subsection{Kiểm chứng Jacobian bằng sai phân hữu hạn}
+Notebook 00 sử dụng ma trận không đối xứng
+\[
+W=\begin{bmatrix}0.2&-0.4\\0.7&0.1\end{bmatrix},\qquad
+h=\begin{bmatrix}0.1\\-0.2\end{bmatrix},\qquad
+c=\begin{bmatrix}0.3\\-0.1\end{bmatrix}.
+\]
+Với $f(h)=\tanh(c+Wh)$, cột thứ $j$ của Jacobian số được tính bằng
+\begin{equation}
+J_{:,j}^{\mathrm{num}}=\frac{f(h+\varepsilon e_j)-f(h-\varepsilon e_j)}{2\varepsilon},\qquad \varepsilon=10^{-6}.
+\end{equation}
+So sánh với $\operatorname{diag}(1-f(h)^2)W$ cho sai số tuyệt đối lớn nhất khoảng $3.01\times10^{-12}$. Kiểm tra này xác nhận công thức của một bước chuyển trạng thái, bao gồm thứ tự nhân ma trận. Nó độc lập với kết quả huấn luyện trên hai tập dữ liệu.
+
+\codefigure{code_jacobian.png}{Mã kiểm chứng Jacobian bằng sai phân hữu hạn trong notebook 00.}{fig:code-jacobian}
+
+Trong Hình~\ref{fig:code-jacobian}, \texttt{jacobian\_formula} nhân ma trận đường chéo đạo hàm kích hoạt với \texttt{W\_check} theo đúng thứ tự. \texttt{np.eye(2)} sinh hai hướng tọa độ; mỗi phép sai phân trung tâm tạo một cột Jacobian số. \texttt{np.column\_stack} ghép hai cột thành ma trận $2\times2$. Lệnh \texttt{assert\_allclose} so sánh hai cách tính với sai số tuyệt đối và tương đối, giúp phát hiện cả sai thứ tự nhân lẫn sai hướng đạo hàm.
+
+\section{Suy giảm và bùng nổ gradient}
+Qua nhiều bước, gradient chứa tích của các Jacobian:
+\begin{equation}
+\frac{\partial h_T}{\partial h_t}=J_TJ_{T-1}\cdots J_{t+1},\qquad
+\left\|\frac{\partial h_T}{\partial h_t}\right\|
+\leq\prod_{k=t+1}^{T}\|J_k\|.
+\end{equation}
+Các hệ số nhỏ lặp lại làm tín hiệu đạo hàm suy giảm; các hướng được khuếch đại liên tiếp có thể làm gradient tăng mạnh. Với $\tanh$, đạo hàm nằm trong $[0,1]$ và tiến về 0 khi đầu vào bão hòa. Trọng số hồi tiếp, trạng thái và hướng của gradient cùng quyết định hành vi của tích ma trận~\cite{pascanu}.
+
+\figbao{nb00_cell22_0.png}{Mô phỏng tích hệ số vô hướng qua 40 bước. Đồ thị minh họa cơ chế truyền gradient, không phải gradient đo từ các mô hình đã huấn luyện.}{fig:gradient}
+
+Ở kịch bản suy giảm của notebook, hệ số mỗi bước là $0.85\times0.8=0.68$, nên sau 30 bước độ lớn còn khoảng $9.45\times10^{-6}$. Kịch bản tăng dùng hệ số 1.15 và đạo hàm kích hoạt giả định bằng 1, cho $1.15^{30}\approx66.21$. Hai đường mô phỏng dùng giả định khác nhau về đạo hàm kích hoạt. Chúng không xác lập một số bước nhớ cố định cho mọi RNN.
+
+Gradient clipping giới hạn độ lớn gradient khi bùng nổ, còn khởi tạo thích hợp và lựa chọn độ dài chuỗi có thể giúp quá trình tối ưu ổn định hơn. Các cấu hình thực nghiệm của bài chưa sử dụng clipping. Vì vậy, các nhận xét về loss và dự báo ở chương kết quả dựa trên cấu hình Vanilla RNN đã chạy.
+
+\section{Liên hệ với LSTM và GRU}
+LSTM bổ sung trạng thái ô nhớ $c_t$ và các cổng điều khiển. Một dạng biểu diễn thường dùng là
+\begin{align}
+f_t&=\sigma(W_f[x_t;h_{t-1}]+b_f),&
+i_t&=\sigma(W_i[x_t;h_{t-1}]+b_i),\\
+\widetilde c_t&=\tanh(W_c[x_t;h_{t-1}]+b_c),&
+o_t&=\sigma(W_o[x_t;h_{t-1}]+b_o),\\
+c_t&=f_t\odot c_{t-1}+i_t\odot\widetilde c_t,&
+h_t&=o_t\odot\tanh(c_t).
+\end{align}
+Nhánh cộng trong cập nhật $c_t$ tạo một đường truyền khác với việc chỉ lặp phép $\tanh(W_hh_{t-1}+\cdots)$ của Vanilla RNN. GRU dùng cổng cập nhật và cổng đặt lại để phối hợp trạng thái cũ với trạng thái ứng viên, với ít thành phần hơn LSTM. Cơ chế cổng hỗ trợ việc học phụ thuộc dài nhưng vẫn chịu ảnh hưởng của dữ liệu và tối ưu~\cite{lstm,gru}.
+
+LSTM và GRU được nêu để giải thích hướng phát triển của kiến trúc. Các bảng thực nghiệm của Assignment 06 chỉ gồm Vanilla RNN; chưa có kết quả huấn luyện LSTM hoặc GRU để so sánh định lượng.
+
+
+\chapter{Dữ liệu và phân tích khám phá}
+\label{chap:data}
+
+\section{Dữ liệu giá cổ phiếu S\&P 500}
+\subsection{Nguồn dữ liệu và cấu trúc}
+Tệp \path{dataset/all_stocks_5yr.csv} thuộc bộ \emph{S\&P 500 stock data} do Cam Nugent công bố trên Kaggle~\cite{stocks}. Tệp thực nghiệm có 619,040 dòng, 7 cột và 505 mã cổ phiếu, từ ngày 08/02/2013 đến 07/02/2018. Số 505 là số mã khác nhau trong tệp, không được thay bằng số 500 trong tên bộ dữ liệu. Mỗi dòng biểu diễn một mã tại một ngày giao dịch.
+
+\begin{table}[H]\centering\small
+\caption{Thuộc tính của tệp giá cổ phiếu}\label{tab:stock-schema}
+\begin{tabularx}{\linewidth}{@{}p{2cm}p{2.1cm}Y@{}}\toprule
+Thuộc tính & Dạng dữ liệu & Ý nghĩa và vai trò \\\midrule
+\texttt{date} & Ngày & Sắp xếp, chia tập và gắn ngày cho dự báo \\
+\texttt{open} & Số thực & Giá mở cửa, đặc trưng đầu vào \\
+\texttt{high} & Số thực & Giá cao nhất phiên, đặc trưng đầu vào \\
+\texttt{low} & Số thực & Giá thấp nhất phiên, đặc trưng đầu vào \\
+\texttt{close} & Số thực & Giá đóng cửa, đặc trưng trễ và biến mục tiêu \\
+\texttt{volume} & Số nguyên & Khối lượng giao dịch, đặc trưng đầu vào \\
+\texttt{Name} & Chuỗi & Mã cổ phiếu, dùng để chọn AAPL \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Trên toàn bộ tệp, \texttt{open} thiếu 11 giá trị, \texttt{high} và \texttt{low} mỗi cột thiếu 8 giá trị; \texttt{close} và \texttt{volume} không thiếu. Không có dòng trùng lặp hoàn toàn. Sau khi chọn AAPL và sắp xếp theo \texttt{date}, còn 1,259 dòng đầy đủ ở năm đặc trưng dùng cho mô hình. Vì tập con này không thiếu giá trị, quá trình thực nghiệm không cần nội suy giá hay điền khối lượng.
+
+\codefigure{code_stock_prepare.png}{Mã chọn AAPL, sắp xếp thời gian và kiểm tra giá trị thiếu trong notebook 01.}{fig:code-stock-prepare}
+
+Hình~\ref{fig:code-stock-prepare} lọc mã AAPL trước khi tạo chuỗi. \texttt{copy()} tạo DataFrame riêng, \texttt{to\_datetime} chuyển cột ngày sang kiểu thời gian và \texttt{reset\_index} tạo chỉ số hàng liên tiếp sau sắp xếp. Các lệnh in xác nhận quy mô 1,259 phiên và kiểm tra thiếu dữ liệu. Thứ tự này làm cho vị trí hàng trong bước tạo cửa sổ cũng là thứ tự thời gian của các phiên.
+
+\subsection{Lựa chọn AAPL và phạm vi dự báo}
+AAPL được chọn làm một chuỗi duy nhất để giữ định nghĩa cửa sổ rõ ràng. Một mô hình nhận dữ liệu của nhiều mã sẽ cần kiểm soát ranh giới giữa các mã, thang giá và đặc trưng định danh; các bước đó nằm ngoài cấu hình hiện tại. Mục tiêu ở đây là dự báo giá đóng cửa kế tiếp của AAPL từ lịch sử OHLCV của chính mã này.
+
+Đầu vào của một mẫu gồm 20 phiên liên tiếp. Các thông tin mở cửa, cao nhất, thấp nhất, đóng cửa và khối lượng của phiên $t$ chỉ có đầy đủ sau khi phiên đó kết thúc. Vì vậy, mốc phát sinh dự báo là sau phiên $t$, và giá cần dự báo thuộc phiên $t+1$. Giá trị trong báo cáo giữ nguyên đơn vị USD của tệp lịch sử.
+
+\figbao{nb03_cell08_0.png}{Phân bố giá đóng cửa và diễn biến theo thời gian của AAPL.}{fig:stock-series}
+
+\subsection{Phân bố giá và khối lượng}
+\begin{table}[H]\centering\small
+\caption{Thống kê mô tả của AAPL trước khi chia tập}\label{tab:stock-statistics}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+Đại lượng & Trung bình & Độ lệch chuẩn & Nhỏ nhất & Lớn nhất \\\midrule
+Open (USD) & 109.0554 & 30.5492 & 55.4242 & 179.3700 \\
+High (USD) & 109.9511 & 30.6862 & 57.0857 & 180.1000 \\
+Low (USD) & 108.1416 & 30.3762 & 55.0142 & 178.2500 \\
+Close (USD) & 109.0667 & 30.5568 & 55.7899 & 179.2600 \\
+Volume (triệu) & 54.048 & 33.468 & 11.476 & 266.834 \\\bottomrule
+\end{tabular}
+\end{table}
+
+Giá đóng cửa có trung vị 109.01 USD, tứ phân vị thứ nhất 84.8306 USD và tứ phân vị thứ ba 127.12 USD. Histogram của mức giá trên toàn bộ 5 năm phản ánh việc chuỗi đi qua nhiều vùng giá khác nhau; nó không phải phân bố của lợi suất hay phân bố sai số dự báo. Độ lệch chuẩn 30.5568 USD cũng được tính trên mức giá toàn kỳ, nên bao gồm biến động giữa các giai đoạn.
+
+\figbao{nb03_cell12_0.png}{Phân bố giá đóng cửa và khối lượng AAPL. Các điểm khối lượng lớn được giữ trong dữ liệu thực nghiệm.}{fig:stock-distribution}
+
+Khối lượng có trung vị khoảng 45.669 triệu cổ phiếu, thấp hơn trung bình 54.048 triệu. Theo ngưỡng IQR phía trên, $Q_3+1.5\,\mathrm{IQR}=127,230,235.25$, có 46 quan sát vượt ngưỡng, tương đương khoảng 3.65\% số phiên. Đây là tiêu chí phát hiện điểm bất thường về mặt phân bố; nó không đủ để xác định bản ghi sai. Các phiên này được giữ nguyên để mô hình tiếp xúc với biến động đã ghi nhận.
+
+\subsection{Tương quan và thay đổi thang giá}
+\figbao{nb03_cell15_2.png}{Ma trận tương quan Pearson giữa năm đặc trưng AAPL.}{fig:stock-correlation}
+
+Các giá trị Open, High, Low và Close cùng mô tả một phiên nên có tương quan cao. Điều đó cho thấy sự trùng lặp thông tin giữa các đặc trưng giá; không có nghĩa cả bốn đặc trưng đều tạo ra mức cải thiện riêng biệt cho dự báo ngày sau. Tương quan giữa Close và Volume trên toàn kỳ là khoảng $-0.6203$. Đây là tương quan đồng thời, có thể chịu ảnh hưởng của xu hướng dài hạn, không phải bằng chứng quan hệ nhân quả.
+
+Đồ thị so sánh một số cổ phiếu trong notebook sử dụng chỉ số cơ sở 100, $I_t=100P_t/P_0$. Nếu AAPL kết thúc ở mức 235.12 thì mức tăng tương ứng là 135.12\% so với đầu kỳ. Chỉ số này dùng để so sánh biến động tương đối; mô hình vẫn được huấn luyện bằng năm đặc trưng gốc sau chuẩn hóa MinMax.
+
+Tập Train có giá đóng cửa nằm trong $[55.7899,133.00]$ USD, trong khi toàn chuỗi đạt 179.26 USD. Sự dịch chuyển mức giá này tạo tình huống ngoại suy khi dự báo ở giai đoạn Test. Một giá trị lớn hơn 1 sau MinMax ở Test là hệ quả của việc vượt cực đại Train, không phải lỗi chuẩn hóa.
+
+\section{Dữ liệu giao dịch Online Retail II}
+\subsection{Nguồn và đơn vị quan sát}
+Online Retail II do Daqing Chen cung cấp qua UCI Machine Learning Repository, ghi nhận giao dịch của một nhà bán lẻ trực tuyến tại Vương quốc Anh từ 01/12/2009 đến 09/12/2011~\cite{retail}. Tệp sử dụng trong bài là \path{dataset/online_retail_II.csv}, có 1,067,371 dòng và 8 cột, phù hợp với bộ dữ liệu hai năm. Bản Excel \path{online_retail_II.xlsx} được lưu cùng thư mục dữ liệu.
+
+Một dòng thể hiện một mặt hàng trong hóa đơn; một hóa đơn có thể gồm nhiều dòng. Do đó, số dòng không đồng nhất với số đơn hàng hoặc số khách hàng. Tệp có 53,628 mã hóa đơn, 5,942 mã khách hàng không thiếu và 43 quốc gia. Riêng United Kingdom có 981,330 dòng. Những thống kê này được tính trước bước lọc và tổng hợp.
+
+\begin{table}[H]\centering\small
+\caption{Thuộc tính trong bản CSV Online Retail II}\label{tab:retail-schema}
+\begin{tabularx}{\linewidth}{@{}p{2.6cm}Y@{}}\toprule
+Thuộc tính & Ý nghĩa và cách sử dụng \\\midrule
+\texttt{Invoice} & Mã hóa đơn; tiền tố C chỉ bản ghi hủy. Dùng để lọc và đếm số hóa đơn duy nhất. \\
+\texttt{StockCode} & Mã mặt hàng, dùng khi đối chiếu bản ghi bất thường. \\
+\texttt{Description} & Mô tả hàng hóa; không phải đầu vào của RNN hiện tại. \\
+\texttt{Quantity} & Số lượng trên dòng hàng, dùng tính thành tiền và tổng số lượng. \\
+\texttt{InvoiceDate} & Thời điểm hóa đơn, được chuyển sang datetime và rút phần ngày. \\
+\texttt{Price} & Đơn giá tính bằng GBP. \\
+\texttt{Customer ID} & Mã khách hàng; có thể thiếu, không dùng để dự báo tổng doanh số. \\
+\texttt{Country} & Quốc gia khách hàng; dùng trong mô tả dữ liệu. \\\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Chất lượng dữ liệu và quy tắc làm sạch}
+\begin{table}[H]\centering\small
+\caption{Các vấn đề chất lượng trên dữ liệu giao dịch gốc}\label{tab:retail-quality}
+\begin{tabularx}{\linewidth}{@{}YrY@{}}\toprule
+Điều kiện & Số dòng & Xử lý trong thực nghiệm \\\midrule
+Thiếu Description & 4,382 & Giữ nếu thỏa điều kiện bán hàng \\
+Thiếu Customer ID & 243,007 & Giữ để tổng hợp doanh số \\
+Trùng lặp hoàn toàn & 34,335 & Loại bản ghi lặp \\
+Invoice bắt đầu bằng C & 19,494 & Loại khỏi chuỗi bán dương \\
+Quantity $<0$ & 22,950 & Chỉ giữ Quantity $>0$ \\
+Price $\leq0$ & 6,207 & Chỉ giữ Price $>0$ \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Các nhóm trong Bảng~\ref{tab:retail-quality} có giao nhau. Một dòng có thể đồng thời là hóa đơn hủy và có số lượng âm, nên tổng các hàng của bảng không biểu diễn số dòng bị loại. Sau toàn bộ quy tắc lọc, còn 1,007,913 dòng, tương đương 94.43\% dữ liệu gốc. Việc bỏ dòng trùng hoàn toàn là giả định làm sạch được áp dụng thống nhất cho hai framework.
+
+Tỷ lệ thiếu Customer ID là 22.77\%, nhưng biến này không tham gia công thức tổng doanh số theo ngày. Loại mọi dòng thiếu mã khách sẽ loại thêm giá trị bán hàng khỏi chuỗi đích. Bài thực nghiệm giữ các dòng đó nếu hóa đơn không có tiền tố hủy, số lượng và đơn giá đều dương. Mô tả hàng hóa cũng không phải điều kiện để tính thành tiền.
+
+\codefigure{code_retail_clean.png}{Mã lọc giao dịch và tạo Revenue trong notebook 02.}{fig:code-retail-clean}
+
+Trong Hình~\ref{fig:code-retail-clean}, \texttt{drop\_duplicates()} xử lý dòng trùng trước khi áp dụng mặt nạ lọc. \texttt{InvoiceStr} là cột Invoice đã được chuyển sang chuỗi ở cell khảo sát dữ liệu. Ba điều kiện nối bằng toán tử \texttt{\&} yêu cầu đồng thời không có tiền tố C, số lượng dương và đơn giá dương. Cột \texttt{Date} bỏ thành phần giờ để các dòng cùng ngày có thể được tổng hợp. Dòng 18 tạo giá trị mỗi dòng hàng; đây vẫn là dữ liệu ở cấp giao dịch, chưa phải doanh số ngày.
+
+
+\subsection{Định nghĩa biến mục tiêu và giao dịch hủy}
+Tên biến \texttt{Revenue} trong notebook là tích Quantity và Price của dòng đã lọc. Tổng qua toàn bộ dữ liệu sạch bằng 20,476,260.45 GBP. Trong báo cáo, đại lượng này được gọi là \emph{doanh số các dòng bán dương} hoặc viết gọn là \emph{doanh số}. Nó chưa khấu trừ giao dịch hủy và hoàn trả, nên khác doanh thu thuần.
+
+Sự khác biệt thể hiện rõ ở ngày 09/12/2011. Dữ liệu gốc có hai dòng sau:
+\begin{table}[H]\centering\small
+\caption{Cặp bản ghi bán và hủy của mặt hàng 23843 ngày 09/12/2011}\label{tab:cancel-pair}
+\begin{tabular}{@{}llrrr@{}}\toprule
+Invoice & Giờ & Quantity & Price (GBP) & Thành tiền (GBP) \\\midrule
+581483 & 09:15 & 80,995 & 2.08 & 168,469.60 \\
+C581484 & 09:27 & $-80,995$ & 2.08 & $-168,469.60$ \\\bottomrule
+\end{tabular}
+\end{table}
+
+Quy tắc lọc giữ dòng bán và loại dòng hủy. Do đó, giá trị 168,469.60 GBP vẫn góp vào doanh số dương 200,918.98 GBP của ngày này. Cặp bản ghi cho thấy đỉnh chuỗi chịu ảnh hưởng trực tiếp của định nghĩa mục tiêu. Việc gọi toàn bộ đỉnh này là doanh thu đã thực hiện thành công sẽ không phản ánh giao dịch hủy được ghi trong nguồn.
+
+Để xây dựng một bài toán doanh thu thuần, bước chuẩn bị dữ liệu phải thay đổi cách đối soát hóa đơn và xử lý dòng âm. Khi đó chuỗi đích, phân bố, tham số scaler và các chỉ số đánh giá đều phải tính lại. Thực nghiệm hiện tại giữ nguyên định nghĩa doanh số dương ở cả PyTorch và Keras.
+
+\section{Tổng hợp giao dịch thành chuỗi theo ngày}
+Với tập dòng đã lọc thuộc ngày $d$ ký hiệu $\mathcal{I}_d$, bốn đặc trưng được tính như sau:
+\begin{align}
+R_d&=\sum_{i\in\mathcal{I}_d}q_ip_i, &
+Q_d&=\sum_{i\in\mathcal{I}_d}q_i,\\
+N_d&=\left|\{\mathrm{Invoice}_i:i\in\mathcal{I}_d\}\right|,&
+A_d&=R_d/N_d.
+\end{align}
+$R_d$ là \texttt{daily\_revenue}, $Q_d$ là \texttt{daily\_quantity}, $N_d$ là \texttt{transaction\_count} và $A_d$ là \texttt{avg\_order\_value}. Số đơn hàng được tính bằng số mã hóa đơn duy nhất trong ngày, không phải số dòng sản phẩm.
+
+\codefigure{code_retail_aggregate.png}{Mã tổng hợp bốn đặc trưng theo ngày trong notebook 02.}{fig:code-retail-aggregate}
+
+Phép \texttt{groupby('Date')} trong Hình~\ref{fig:code-retail-aggregate} gom các dòng hàng có cùng ngày. Hai phép \texttt{sum} cộng giá trị bán và số lượng, còn \texttt{nunique} đếm mã hóa đơn phân biệt. Vì một hóa đơn có nhiều mặt hàng, dùng số dòng thay cho \texttt{nunique} sẽ làm thay đổi ý nghĩa của số đơn và giá trị bình quân đơn. Sau khi tính tỷ số doanh số trên số hóa đơn, lệnh \texttt{sort\_values} đưa chuỗi về thứ tự thời gian để chia tập và tạo cửa sổ.
+
+
+Sau tổng hợp, chuỗi có 604 ngày được ghi nhận. Ngày đầu tiên 01/12/2009 có doanh số 54,351.23 GBP, tổng số lượng 26,098, số hóa đơn 119 và giá trị bình quân hóa đơn khoảng 456.73 GBP. Các đại lượng cùng ngày có liên hệ đại số, đặc biệt $R_d=N_dA_d$. Khi dự báo $R_{d+1}$, mô hình chỉ nhận các đại lượng đến ngày $d$, nên quan hệ này không đưa trực tiếp mục tiêu tương lai vào đầu vào.
+
+\section{Phân bố và đặc điểm thời gian của doanh số}
+\subsection{Phân bố lệch phải và giá trị cực đoan}
+Doanh số ngày có trung bình 33,901.09 GBP, trung vị 29,325.73 GBP, độ lệch 2.1886 và độ nhọn dư khoảng 11.1482. Trung bình lớn hơn trung vị và phần đuôi phải dài cho thấy một số ngày doanh số cao kéo phân bố về phía trên.
+
+\figbao{nb02_cell10_0.png}{Phân bố doanh số và chuỗi theo thời gian sau làm sạch. Các đường SMA được tính trên số quan sát liên tiếp.}{fig:retail-distribution}
+
+Với ngưỡng trung bình cộng ba độ lệch chuẩn, khoảng 91,084 GBP, có bảy ngày vượt ngưỡng trong toàn bộ chuỗi. Ngày 27/09/2010 đạt 118,838.47 GBP, ngày 20/09/2011 đạt 109,553.90 GBP và ngày 09/12/2011 đạt 200,918.98 GBP. Các ngày này được giữ trong huấn luyện hoặc đánh giá theo vị trí thời gian của chúng. Việc giữ giá trị cực đoan làm bài toán khó hơn nhưng duy trì đúng chuỗi đích đã định nghĩa.
+
+\figbao{nb02_cell12_0.png}{Diễn biến số lượng hàng và số hóa đơn theo ngày trong Online Retail II.}{fig:retail-activity}
+
+Tương quan Pearson giữa doanh số và tổng số lượng là 0.7840; với số hóa đơn là 0.6781; với giá trị bình quân hóa đơn là 0.7151. Các hệ số này mô tả liên hệ đồng thời của dữ liệu tổng hợp. Để đánh giá giá trị dự báo riêng của từng biến cần thí nghiệm loại bỏ đặc trưng hoặc phân tích độ trễ; các thí nghiệm đó chưa nằm trong bốn mô hình hiện tại.
+
+\subsection{Ngày thiếu và khoảng cách giữa các bước}
+Khoảng lịch từ 01/12/2009 đến 09/12/2011 có 739 ngày, trong khi chuỗi sau tổng hợp chỉ có 604 ngày. Có 135 ngày không xuất hiện, trong đó 104 ngày là thứ Bảy. Chuỗi vẫn có một thứ Bảy được ghi nhận, nên các ngày thiếu không thể được đồng nhất hoàn toàn với một lịch đóng cửa cố định.
+
+Bài thực nghiệm không thêm các ngày thiếu và không tự điền doanh số bằng 0. Cách này giữ nguyên các quan sát có trong dữ liệu, nhưng làm khoảng cách thời gian giữa hai bước không đều. Cửa sổ $L=14$ vì thế chứa 14 ngày quan sát, không nhất thiết là 14 ngày lịch hoặc đúng hai tuần. Các đường SMA7 và SMA30 cũng dùng 7 và 30 quan sát.
+
+\figbao{nb02_cell15_2.png}{Phân bố doanh số theo thứ và doanh số trung bình theo tháng. Các nhóm có số quan sát khác nhau và chịu ảnh hưởng của các ngày doanh số cao.}{fig:retail-seasonality}
+
+Biểu đồ nhóm theo thứ và tháng gợi ý khác biệt giữa các giai đoạn, nhưng các thống kê nhóm chưa tách xu hướng, mùa vụ và ảnh hưởng của ngoại lai. Tập dữ liệu chỉ bao phủ khoảng hai năm; tháng 12 xuất hiện ở ba năm với mức độ đầy đủ khác nhau. Mô hình hiện chưa nhận biến lịch, khoảng cách ngày hoặc trạng thái ngày hoạt động. Những yếu tố này là một phần giới hạn của biểu diễn đầu vào.
+
+\section{Sự phù hợp của hai tập dữ liệu}
+Tập chứng khoán cung cấp một chuỗi đa biến có thứ tự phiên và mục tiêu số thực rõ ràng. Tập bán lẻ cung cấp thời điểm mua hàng, số lượng và đơn giá, cho phép xây dựng chuỗi doanh số từ giao dịch. Hai tập đáp ứng hai miền dữ liệu của bài và tạo ra các tình huống khác nhau về chuẩn hóa, ngoại lai và ý nghĩa bước thời gian.
+
+Các thống kê và đồ thị toàn kỳ trong chương này phục vụ mô tả dữ liệu. Quá trình tối ưu và chọn trọng số ở các chương sau sử dụng Train và Validation; Test được dùng để đo chất lượng của cấu hình đã xác định. Cả hai framework nhận cùng dữ liệu, cùng thứ tự đặc trưng và cùng các mốc thời gian trong từng bài toán.
+
+
+\chapter{Thiết kế thực nghiệm và quy trình đánh giá}
+\label{chap:method}
+
+\section{Chia dữ liệu theo thời gian}
+Sau khi sắp xếp tăng dần theo ngày, dữ liệu được chia thành ba đoạn liên tiếp với tỷ lệ xấp xỉ 70\% Train, 15\% Validation và 15\% Test. Train phục vụ cập nhật trọng số; Validation phục vụ lựa chọn epoch; Test đo sai số ở giai đoạn về sau. Việc chia theo thời gian giữ đúng hướng dự báo từ quá khứ sang tương lai.
+
+\begin{table}[H]\centering\small
+\caption{Các đoạn dữ liệu trước khi tạo cửa sổ}\label{tab:raw-split}
+\begin{tabular}{@{}llrll@{}}\toprule
+Dữ liệu & Tập & Số dòng & Ngày bắt đầu & Ngày kết thúc \\\midrule
+AAPL & Train & 881 & 08/02/2013 & 08/08/2016 \\
+& Validation & 188 & 09/08/2016 & 08/05/2017 \\
+& Test & 190 & 09/05/2017 & 07/02/2018 \\\midrule
+Online Retail II & Train & 422 & 01/12/2009 & 09/05/2011 \\
+& Validation & 90 & 10/05/2011 & 23/08/2011 \\
+& Test & 92 & 24/08/2011 & 09/12/2011 \\\bottomrule
+\end{tabular}
+\end{table}
+
+\codefigure{code_split.png}{Mã chia dữ liệu và mảng ngày theo cùng các mốc trong notebook 01.}{fig:code-split}
+
+Ở Hình~\ref{fig:code-split}, \texttt{int} lấy phần nguyên của tỷ lệ Train và Validation; Test nhận phần còn lại, nên tổng số dòng được bảo toàn. Các phép cắt dữ liệu và ngày dùng cùng ranh giới. Nhờ vậy, một cửa sổ và nhãn của nó có thể gắn đúng ngày trong biểu đồ đánh giá. Việc giữ \texttt{feature\_cols} theo thứ tự OHLCV cũng cố định vị trí 3 của biến Close trong các bước tiếp theo.
+
+\figbao{nb03_cell18_1.png}{Các đoạn Train, Validation và Test trên chuỗi AAPL.}{fig:stock-split}
+\figbao{nb02_cell20_1.png}{Các đoạn Train, Validation và Test trên chuỗi doanh số bán lẻ.}{fig:retail-split}
+
+\section{Chuẩn hóa bằng thống kê của Train}
+Mỗi đặc trưng được chuẩn hóa độc lập theo
+\begin{equation}
+z_{t,j}=\frac{x_{t,j}-m_j}{M_j-m_j},\qquad
+m_j=\min_{t\in\mathrm{Train}}x_{t,j},\quad
+M_j=\max_{t\in\mathrm{Train}}x_{t,j}.
+\label{eq:minmax}
+\end{equation}
+Bài sử dụng một \texttt{MinMaxScaler} cho các đặc trưng và một scaler riêng cho biến mục tiêu. Hai scaler đều chỉ được fit trên Train. Scaler mục tiêu giúp khôi phục dự báo về USD hoặc GBP mà không phải ghép thêm các cột giả. Khi mục tiêu cũng nằm trong bộ đặc trưng, hai cách scale cột đó dùng cùng cực trị Train nên nhất quán về số học~\cite{minmax}.
+
+\codefigure{code_scaler.png}{Mã fit và sử dụng MinMaxScaler trong notebook 01.}{fig:code-scaler}
+
+Hình~\ref{fig:code-scaler} tách việc ước lượng thống kê khỏi việc biến đổi dữ liệu. Dòng 8 chỉ fit \texttt{feature\_scaler} trên \texttt{train\_data}; các dòng 11--13 áp dụng cùng phép biến đổi cho ba tập. \texttt{train\_data[:, [3]]} giữ cột Close ở dạng ma trận hai chiều $(N,1)$, đúng định dạng đầu vào của scaler mục tiêu. Scaler riêng này được dùng lại khi đổi dự báo về USD ở bước đánh giá.
+
+
+Với bán lẻ, doanh số Train nằm trong $[3,439.67;118,838.47]$ GBP. Đỉnh 200,918.98 GBP ở Test được biến đổi thành khoảng 1.7113. Giá trị bình quân hóa đơn của Test có thể đạt khoảng 2.07 sau chuẩn hóa. Bài không clip các giá trị về $[0,1]$, vì làm vậy sẽ thay đổi dữ liệu ngoài miền Train và làm mất độ lớn của các đỉnh.
+
+MinMax không loại ngoại lai. Nó đưa các đặc trưng về thang đo dựa trên cực trị Train, nhưng những điểm lớn vẫn có thể chi phối phạm vi. Việc dùng log doanh số, chuẩn hóa khác hoặc xử lý ngoại lai sẽ tạo cấu hình tiền xử lý khác và cần được đánh giá lại.
+
+\section{Tạo cửa sổ và căn chỉnh nhãn}
+Với một đoạn dữ liệu $Z$ gồm $n$ quan sát, mẫu thứ $i$ được tạo bằng
+\begin{equation}
+X_i=Z[i:i+L,:],\qquad y_i=Z[i+L,j_y],\qquad i=0,\ldots,n-L-1.
+\end{equation}
+Chỉ số mục tiêu là $j_y=3$ đối với thứ tự OHLCV và $j_y=0$ đối với thứ tự đặc trưng bán lẻ. Từng đoạn Train, Validation và Test được tạo cửa sổ riêng. Do đó, $L$ quan sát đầu mỗi đoạn làm lịch sử và không xuất hiện như nhãn của đoạn đó.
+
+\codefigure{code_windows.png}{Mã tạo cửa sổ AAPL và áp dụng riêng cho ba tập trong notebook 01.}{fig:code-windows}
+
+Ở dòng 20 của Hình~\ref{fig:code-windows}, chỉ số cuối của phép cắt không được lấy vào cửa sổ, nên mẫu có đúng \texttt{seq\_length} quan sát. Dòng 22 lấy nhãn ở vị trí ngay sau cửa sổ và chỉ lấy cột \texttt{target\_idx}. Hai danh sách được chuyển thành mảng float32 để đưa vào mô hình. Với Train AAPL, $881-20=861$ cửa sổ được tạo; ba lời gọi cuối dùng ba mảng riêng nên không có cửa sổ nối qua ranh giới chia tập.
+
+
+\begin{table}[H]\centering\small
+\caption{Số mẫu sau tạo cửa sổ và khoảng nhãn Test}\label{tab:window-counts}
+\begin{tabularx}{\linewidth}{@{}Ycc@{}}\toprule
+Thông số & AAPL & Online Retail II \\\midrule
+Độ dài cửa sổ $L$ & 20 & 14 \\
+Số đặc trưng $D$ & 5 & 4 \\
+Số mẫu Train & 861 & 408 \\
+Số mẫu Validation & 168 & 76 \\
+Số mẫu Test & 170 & 78 \\
+Ngày nhãn Test đầu & 07/06/2017 & 11/09/2011 \\
+Ngày nhãn Test cuối & 07/02/2018 & 09/12/2011 \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Cách tạo cửa sổ này không dùng phần cuối Train làm lịch sử cho đầu Validation, cũng không dùng phần cuối Validation cho đầu Test. Nó làm giảm số nhãn có thể đánh giá nhưng tạo ranh giới đơn giản giữa các đoạn. Dùng lịch sử quá khứ ở đoạn trước cho nhãn đầu đoạn sau cũng có thể hợp lệ về thời gian; đó là một giao thức khác và sẽ cho số mẫu khác. Các chỉ số trong báo cáo đều ứng với Bảng~\ref{tab:window-counts}.
+
+\section{Giao thức dự báo một bước cuốn chiếu}
+Ở mỗi nhãn Test, cửa sổ đầu vào chứa các quan sát thực tế đã xuất hiện trước nhãn đó. Sau khi bước thời gian tiếp theo được quan sát, cửa sổ tiếp tục dịch để dự báo bước kế tiếp. Trọng số mô hình giữ cố định trong toàn bộ giai đoạn Test.
+
+Ví dụ, một dự báo AAPL sử dụng 20 phiên thực tế trước ngày 07/06/2017. Dự báo kế tiếp sử dụng cửa sổ đã dịch một phiên, trong đó giá ngày 07/06/2017 là giá thực tế được quan sát sau khi phiên này kết thúc. Mô hình không dùng dự báo của chính nó thay cho giá thực tế để tạo toàn bộ chuỗi về sau.
+
+Đây là dự báo một bước cuốn chiếu với lịch sử thực tế, khác dự báo nhiều bước đệ quy từ một mốc xuất phát duy nhất. Đối với đầu vào đa biến, dự báo nhiều bước còn cần các giá trị OHLCV hoặc số lượng, số hóa đơn của những bước tương lai. Bốn thí nghiệm hiện tại không giả định đã biết những đại lượng đó trước thời điểm chúng xuất hiện.
+
+\section{Baseline persistence}
+Baseline sử dụng giá trị mục tiêu quan sát gần nhất:
+\begin{equation}
+\widehat y_{t+1}^{\mathrm{base}}=y_t.
+\end{equation}
+Với AAPL, đó là giá đóng cửa phiên trước. Với bán lẻ, đó là doanh số của ngày quan sát trước, có thể cách ngày cần dự báo hơn một ngày lịch. Baseline và RNN được tính trên cùng 170 hoặc 78 nhãn Test, với cùng đơn vị và ngày.
+
+Baseline cho biết mô hình học được có vượt qua phép dự báo chỉ dùng một giá trị trễ hay không. Một đường dự báo bám theo hình dạng chuỗi chưa đủ thể hiện mức cải thiện; sai số phải được đối chiếu trên cùng các điểm. Baseline cũng giúp phân biệt việc học mức giá chung với việc dự báo được biến động kế tiếp.
+
+\codefigure{code_baseline.png}{Mã căn chỉnh baseline persistence và đánh giá cùng nhãn Test trong notebook 04.}{fig:code-baseline}
+
+Hình~\ref{fig:code-baseline} lấy doanh số tại các vị trí từ $L-1$ đến trước phần tử cuối làm dự báo, trong khi nhãn thực tế bắt đầu từ vị trí $L$. Hai mảng vì thế lệch nhau đúng một quan sát. Lệnh kiểm tra độ dài đối chiếu cả baseline, actual và mảng ngày. Hai dictionary sau đó dùng cùng các hàm tính MAE, RMSE, MAPE và $R^2$, chỉ thay mảng dự báo, bảo đảm bảng so sánh sử dụng cùng tập nhãn.
+
+\section{Các chỉ số đánh giá}
+Đặt sai số $e_i=\widehat y_i-y_i$, với $n$ nhãn kiểm thử. Các chỉ số chính là
+\begin{align}
+\mathrm{MAE}&=\frac{1}{n}\sum_{i=1}^{n}|e_i|,\\
+\mathrm{MSE}&=\frac{1}{n}\sum_{i=1}^{n}e_i^2,\qquad
+\mathrm{RMSE}=\sqrt{\mathrm{MSE}},\\
+\mathrm{MAPE}&=\frac{100}{n}\sum_{i=1}^{n}\frac{|e_i|}{|y_i|},\quad y_i\ne0,\\
+R^2&=1-\frac{\sum_i e_i^2}{\sum_i(y_i-\overline y)^2}.
+\end{align}
+MAE và RMSE có đơn vị USD hoặc GBP; MSE có đơn vị bình phương. RMSE nhạy hơn với một số sai số lớn. Với sai số trung bình $\overline e$, ta có $\mathrm{MSE}=\operatorname{Var}(e)+\overline e^{\,2}$ khi phương sai dùng mẫu số $n$. Do đó, RMSE không đồng nhất với độ lệch chuẩn của sai số nếu dự báo có độ chệch.
+
+$R^2$ so sánh tổng sai số bình phương với mức phân tán quanh trung bình của chính tập đánh giá. $R^2<0$ nghĩa là tổng sai số bình phương lớn hơn mức tham chiếu đó. Trung bình Test chỉ dùng trong định nghĩa chỉ số; nó không phải một dự báo có sẵn tại thời điểm bắt đầu Test.
+
+Đối với bán lẻ, báo cáo bổ sung
+\begin{align}
+\mathrm{WAPE}&=100\frac{\sum_i|e_i|}{\sum_i|y_i|},\\
+\mathrm{sMAPE}&=\frac{100}{n}\sum_i\frac{2|e_i|}{|y_i|+|\widehat y_i|},\\
+\mathrm{Bias}&=\frac{1}{n}\sum_i e_i.
+\end{align}
+MAPE cho trọng số lớn với các ngày có giá trị thực thấp. WAPE tính sai số tuyệt đối trên tổng quy mô thực tế nên phản ánh cách cân trọng số khác. Bias âm cho biết dự báo thấp hơn thực tế tính trung bình.
+
+Trong notebook 02, MAPE được tính bằng hàm của scikit-learn. Notebook 04 tính một phiên bản có cộng $10^{-8}$ vào mẫu số và đối chiếu thêm với MAPE chỉ trên các mẫu có $|y|>1$ GBP. Cộng epsilon tránh phép chia cho 0 về mặt số học nhưng không làm tỷ lệ phần trăm có ý nghĩa khi giá trị thực gần 0. Nếu không có mẫu vượt ngưỡng, MAPE có mặt nạ trả về NaN; WAPE cũng trả về NaN nếu tổng $|y|$ bằng 0. Tập Test thực tế có doanh số nhỏ nhất 11,531.56 GBP, nên cả 78 nhãn đều vượt ngưỡng và các cách tính MAPE cho cùng kết quả khi làm tròn trong báo cáo.
+
+\codefigure{code_metrics.png}{Mã tính các chỉ số và kiểm tra MAPE gần 0 trong notebook 04.}{fig:code-metrics}
+
+Hình~\ref{fig:code-metrics} tính MAE và MSE từ cùng hai mảng \texttt{y\_true}, \texttt{y\_pred}; RMSE là căn bậc hai của MSE. WAPE kiểm tra tổng giá trị thực trước khi chia. Với sMAPE, \texttt{np.divide} chỉ chia ở những mẫu có mẫu số dương, còn mảng \texttt{out} khởi tạo bằng 0 thực hiện quy ước $0/0=0$ khi cả dự báo và thực tế đều bằng 0. Mặt nạ ở các dòng 22--26 phục vụ kiểm tra độ nhạy của MAPE đối với các ngày quy mô rất nhỏ.
+
+\section{Lựa chọn mô hình và khả năng tái lập}
+Cả bốn cấu hình cố định seed 42, học bằng Adam với learning rate 0.001 và MSE. PyTorch chạy 100 epoch, lưu bản sao trọng số tại epoch có Validation MSE thấp nhất rồi khôi phục trước khi dự báo Test. Keras dùng EarlyStopping với patience 15 và \texttt{restore\_best\_weights=True}, giới hạn tối đa 100 epoch~\cite{early-stopping}.
+
+Seed 42 cố định lần chạy trong từng môi trường, nhưng không đồng nhất trọng số ban đầu giữa hai thư viện. Cách khởi tạo, bias, đường tính toán và số epoch thực chạy đều khác nhau. Do đó, kết quả so sánh bốn cấu hình cụ thể, chưa cô lập tác động riêng của framework.
+
+Notebook kiểm tra giá trị hữu hạn, thứ tự thời gian, kích thước tensor, nhãn kế tiếp cửa sổ và cực trị scaler trên Train. Dự báo được inverse-transform bằng float64 rồi so với nhãn gốc, tránh làm tròn nhãn tiền tệ qua float32.
+
+\chapter{Cài đặt mô hình bằng PyTorch và Keras}
+\label{chap:implementation}
+
+\section{Kiến trúc chung và số tham số}
+Kiến trúc dùng một tầng RNN với 32 đơn vị ẩn, kích hoạt $\tanh$, sau đó là tầng tuyến tính một đầu ra. Bài không dùng Dropout, BatchNorm, LSTM, GRU hoặc tầng RNN thứ hai trong bốn mô hình dự báo.
+
+PyTorch sử dụng hai vector bias $b_{ih}$ và $b_{hh}$ trong tầng RNN. Số tham số, kể cả tầng đầu ra, là
+\begin{equation}
+P_{\mathrm{Torch}}=HD+H^2+2H+H+1=HD+H^2+3H+1.
+\end{equation}
+Keras SimpleRNN sử dụng một vector bias nên
+\begin{equation}
+P_{\mathrm{Keras}}=HD+H^2+H+H+1=HD+H^2+2H+1.
+\end{equation}
+Hai bias của PyTorch được cộng trong phép chuyển trạng thái, nhưng vẫn là hai tập tham số riêng trong bộ tối ưu. Chênh lệch số tham số giữa hai cách cài đặt là $H=32$.
+
+\begin{table}[H]\centering\small
+\caption{Số tham số của bốn mô hình}\label{tab:parameter-count}
+\begin{tabular}{@{}llrrr@{}}\toprule
+Dữ liệu & Framework & Tầng RNN & Tầng đầu ra & Tổng \\\midrule
+AAPL & PyTorch & 1,248 & 33 & 1,281 \\
+AAPL & Keras & 1,216 & 33 & 1,249 \\
+Online Retail II & PyTorch & 1,216 & 33 & 1,249 \\
+Online Retail II & Keras & 1,184 & 33 & 1,217 \\\bottomrule
+\end{tabular}
+\end{table}
+
+Số tham số không phụ thuộc trực tiếp độ dài cửa sổ vì trọng số được dùng chung giữa các bước. Chi phí tính toán của tầng hồi tiếp tăng theo $B L H(D+H)$; huấn luyện còn cần lưu các trạng thái trung gian để lan truyền ngược. Tăng $L$ vì vậy làm tăng thời gian và bộ nhớ dù số tham số không đổi.
+
+\section{Cài đặt PyTorch}
+\subsection{Đóng gói dữ liệu}
+Các lớp Dataset trong notebook trả một cửa sổ và một nhãn dạng tensor float32. DataLoader ghép mẫu thành batch, với batch size 32 cho cổ phiếu và 16 cho bán lẻ. Nhãn được đưa về shape $(B,1)$ để khớp đầu ra và tránh broadcasting khi tính MSE. Batch cuối có thể nhỏ hơn batch size cấu hình.
+
+\texttt{shuffle=False} giữ thứ tự cửa sổ trong mỗi epoch. Tính hợp lệ của dự báo còn phụ thuộc việc chia theo thời gian và bảo toàn thứ tự bên trong cửa sổ. Với RNN stateless, xáo trộn các cửa sổ Train hoàn chỉnh không tự tạo rò rỉ tương lai; cấu hình hiện tại chọn giữ thứ tự để thống nhất quá trình chạy.
+
+\codefigure{code_dataset.png}{Lớp RetailDataset và các DataLoader trong notebook 02.}{fig:code-dataset}
+
+Ở Hình~\ref{fig:code-dataset}, \texttt{unsqueeze(1)} đổi nhãn từ $(N,)$ thành $(N,1)$ trước khi ghép batch. \texttt{\_\_len\_\_} trả số cửa sổ, còn \texttt{\_\_getitem\_\_} trả đúng cặp cửa sổ và nhãn cùng chỉ số. Ba DataLoader nhận ba Dataset riêng, cùng batch size 16 và không xáo trộn. Cấu hình này cho batch Train thông thường có đầu vào $(16,14,4)$ và nhãn $(16,1)$.
+
+\subsection{Lớp mô hình và lan truyền xuôi}
+Hai lớp StockRNN và RetailRNN được trích trực tiếp từ notebook 01 và 02. Tham số đầu vào lần lượt là 5 và 4:
+\codefigure{code_torch_stock.png}{Lớp StockRNN lấy từ notebook 01, gồm khởi tạo và lan truyền xuôi.}{fig:code-torch-stock}
+
+Trong Hình~\ref{fig:code-torch-stock}, hàm khởi tạo đăng ký hai tầng học được là \texttt{self.rnn} và \texttt{self.fc}. \texttt{batch\_first=True} làm đầu vào tuân theo $(B,20,5)$. Khi gọi mô hình, \texttt{rnn\_out} có dạng $(B,20,32)$; phép lấy \texttt{[:, -1, :]} giữ trạng thái cuối và tạo $(B,32)$. Tầng Linear đổi tensor này thành $(B,1)$. Biến \texttt{h\_n} cũng được trả về nhưng không dùng ở bước đọc đầu ra của lớp này.
+\codefigure{code_torch_retail.png}{Lớp RetailRNN trong notebook 02, dùng bốn đặc trưng bán lẻ.}{fig:code-torch-retail}
+
+Lớp RetailRNN trong Hình~\ref{fig:code-torch-retail} giữ nguyên cấu trúc chuyển trạng thái và đầu ra, nhưng \texttt{input\_size=4}. Chiều thời gian 14 đến từ tensor cửa sổ truyền vào, không phải một tham số cố định của \texttt{nn.RNN}. Vì vậy, khác biệt số tham số với StockRNN nằm ở ma trận chiếu đầu vào: $32\times4$ thay cho $32\times5$, giảm 32 tham số và đưa tổng xuống 1,249.
+
+
+Khi không truyền \texttt{h\_0}, RNN khởi tạo trạng thái bằng 0. Hàm \texttt{forward} lấy trạng thái cuối cùng của tầng duy nhất rồi tính giá trị dự báo. Tầng \texttt{Linear} không có kích hoạt sigmoid hoặc thao tác chặn đầu ra. Số tham số được kiểm tra bằng tổng \texttt{p.numel()} trên các tensor học được của mô hình.
+
+\subsection{Vòng lặp huấn luyện và lưu trọng số tốt nhất}
+Mỗi batch thực hiện xóa gradient, lan truyền xuôi, tính loss, lan truyền ngược và cập nhật Adam. Validation chỉ tính loss ở chế độ đánh giá với gradient bị tắt. Loss mỗi epoch là trung bình theo số mẫu; loss của từng batch được nhân với kích thước batch trước khi cộng.
+
+\codefigure{code_train_step.png}{Phần cập nhật trọng số trong vòng lặp huấn luyện PyTorch của notebook 01.}{fig:code-train-step}
+
+Vòng lặp ở Hình~\ref{fig:code-train-step} thực hiện một lượt qua các batch của Train trong mỗi epoch. \texttt{zero\_grad()} xóa gradient tích lũy; \texttt{model(batch\_x)} tính dự báo; \texttt{criterion} so sánh với nhãn cùng batch. \texttt{backward()} tính gradient qua toàn bộ các bước của cửa sổ, còn \texttt{optimizer.step()} cập nhật tham số. Loss batch được nhân với số mẫu trước khi cộng, nên batch cuối nhỏ hơn vẫn đóng góp đúng trọng số vào loss epoch.
+\codefigure{code_checkpoint.png}{Đánh giá Validation và khôi phục best weights trong notebook 01.}{fig:code-checkpoint}
+
+Hình~\ref{fig:code-checkpoint} cho thấy Validation chỉ đi qua \texttt{eval()} và \texttt{no\_grad()}, không gọi \texttt{backward()} hay \texttt{optimizer.step()}. Khi loss Validation giảm, mã lưu cả giá trị nhỏ nhất, epoch tương ứng và bản sao \texttt{state\_dict}. Sau khi vòng lặp kết thúc, \texttt{load\_state\_dict} nạp lại bản sao đó để Test sử dụng đúng trọng số được chọn. Các dòng khởi tạo best loss được thực hiện trước vòng lặp; các dòng khôi phục được thực hiện sau vòng lặp.
+
+
+\texttt{deepcopy} tạo bản sao độc lập của trọng số tại epoch được chọn. Nếu chỉ giữ tham chiếu đến tensor đang tiếp tục huấn luyện, trạng thái lưu có thể thay đổi ở những bước sau. Hai mô hình PyTorch trong lần chạy hiện tại đều có Validation MSE thấp nhất tại epoch 100, nên trọng số được khôi phục trùng với epoch cuối.
+
+\section{Cài đặt TensorFlow/Keras}
+\subsection{Mô hình Sequential}
+Đầu vào của Keras giữ shape $(B,L,D)$. SimpleRNN trả trạng thái cuối với cấu hình \path{return_sequences=False}. Dense ánh xạ 32 chiều thành một giá trị. Đoạn mã tương ứng là
+\codefigure{code_keras_stock.png}{Khai báo mô hình Keras dự báo AAPL trong notebook 03.}{fig:code-keras-stock}
+
+Hình~\ref{fig:code-keras-stock} đặt seed trước khi khởi tạo mô hình. \texttt{Input} khai báo độ dài cửa sổ và năm đặc trưng nhưng không cố định batch size. \texttt{SimpleRNN} giữ 32 đơn vị ẩn và chỉ trả trạng thái cuối; \texttt{Dense(1)} tạo giá dự báo đã chuẩn hóa. Các tên tầng giúp đối chiếu cấu trúc với phần \texttt{model.summary()} trong notebook.
+\codefigure{code_keras_retail.png}{Khai báo mô hình Keras bán lẻ và tính số tham số trong notebook 04.}{fig:code-keras-retail}
+
+Với bán lẻ, Hình~\ref{fig:code-keras-retail} lấy số đặc trưng bằng \texttt{len(feature\_cols)} để khớp bốn cột đã chuẩn bị. Dòng 20 tính $4\times32+32\times32+32=1,184$ tham số tầng SimpleRNN; dòng 21 tính 33 tham số Dense. Tổng là 1,217. Hai đoạn mã cùng tạo mạng many-to-one, còn ý nghĩa đầu ra được quyết định bởi dữ liệu nhãn và target scaler của từng bài toán.
+\codefigure{code_keras_compile.png}{Cấu hình Adam, MSE và chỉ số MAE trong notebook 03.}{fig:code-keras-compile}
+
+Hình~\ref{fig:code-keras-compile} cấu hình learning rate 0.001 và truyền đối tượng \texttt{MeanSquaredError} làm loss. MAE trong \texttt{metrics} là chỉ số theo dõi, không thay thế MSE trong phép tính gradient. Do nhãn đưa vào \texttt{fit} đã chuẩn hóa, các giá trị loss và MAE được ghi trong lịch sử huấn luyện cũng ở thang chuẩn hóa. Các bảng USD/GBP được tính riêng sau inverse-transform.
+
+
+Keras mặc định khởi tạo kernel đầu vào của SimpleRNN bằng Glorot uniform, kernel hồi tiếp bằng ma trận trực giao và bias bằng 0. Các mặc định này khác với khởi tạo của \texttt{nn.RNN}; seed chung không tạo hai mô hình cùng điểm khởi đầu. Đầu ra của Dense là tuyến tính, nên có thể vượt khoảng của dữ liệu Train sau chuẩn hóa.
+
+\subsection{Huấn luyện và dừng sớm}
+\codefigure{code_keras_fit.png}{Cấu hình EarlyStopping và lời gọi model.fit thực tế trong notebook 04.}{fig:code-keras-fit}
+
+Trong Hình~\ref{fig:code-keras-fit}, callback giám sát \texttt{val\_loss}, chờ 15 epoch không cải thiện và khôi phục trọng số tốt nhất. \texttt{validation\_data} truyền rõ hai mảng Validation; dữ liệu Test không xuất hiện trong lời gọi huấn luyện. \texttt{shuffle=False} giữ thứ tự các cửa sổ giữa những batch. Sau khi chạy, lịch sử Train và Validation được lấy từ \texttt{history.history}; \texttt{argmin(...)+1} đổi vị trí mảng bắt đầu từ 0 thành số epoch bắt đầu từ 1. Notebook 03 dùng cùng các thiết lập giám sát này, với batch size 32 thay vì 16.
+
+
+Notebook có minh họa tensor TensorFlow hoặc pipeline dữ liệu tương thích Keras. Lời gọi \texttt{model.fit()} của thí nghiệm sử dụng trực tiếp các mảng NumPy \texttt{X\_train, y\_train}. Vì thế, kết quả thời gian hoặc loss phải được hiểu theo đường thực thi thực tế này.
+
+EarlyStopping dừng khi Validation loss không cải thiện qua 15 epoch liên tiếp và khôi phục trọng số có loss thấp nhất. Mô hình AAPL chạy 19 epoch, khôi phục epoch 4. Mô hình bán lẻ chạy 43 epoch, khôi phục epoch 28. Loss của epoch cuối trong lịch sử không nhất thiết là loss của trọng số được dùng dự báo.
+
+\section{Đối chiếu hai cách cài đặt}
+\begin{table}[H]\centering\small
+\caption{Các khác biệt kỹ thuật giữa PyTorch và Keras trong bài}\label{tab:framework-comparison}
+\begin{tabularx}{\linewidth}{@{}p{3cm}YY@{}}\toprule
+Thành phần & PyTorch & Keras \\\midrule
+Biểu diễn mô hình & Lớp kế thừa \texttt{nn.Module} & \texttt{Sequential} \\
+Lấy trạng thái cuối & \texttt{out[:, -1, :]} & \texttt{return\_sequences=False} \\
+Bias tầng RNN & Hai vector, tổng $2H$ & Một vector, $H$ \\
+Cập nhật trọng số & Vòng lặp, \texttt{backward}, \texttt{step} & \texttt{compile} và \texttt{fit} \\
+Chọn epoch & Chạy 100, lưu best Validation & Dừng sớm, patience 15 \\
+Dữ liệu huấn luyện & Dataset và DataLoader & Mảng NumPy \\
+Dự báo & \texttt{eval} và \texttt{no\_grad} & \texttt{predict} \\\bottomrule
+\end{tabularx}
+\end{table}
+
+
+
+\chapter{Kết quả thực nghiệm và phân tích}
+\label{chap:results}
+
+\section{Tổng hợp cấu hình và quá trình huấn luyện}
+Các kết quả được lấy từ lần thực thi đầy đủ năm notebook. Bốn mô hình sử dụng cùng kiến trúc một tầng hồi tiếp 32 chiều; batch size phụ thuộc bài toán. Cấu hình không được thay đổi dựa trên thứ hạng Test. Đường loss dùng thang đo chuẩn hóa, còn các bảng chất lượng dự báo dùng đơn vị gốc.
+
+Các bảng Bias dùng quy ước $\widehat y-y$. Đồ thị PyTorch và Keras bán lẻ biểu diễn sai số tuyệt đối $|\widehat y-y|$ ở phần dưới; đồ thị Keras AAPL biểu diễn phần dư có dấu $\widehat y-y$. Hai dạng đồ thị lần lượt thể hiện độ lớn sai số và hướng lệch của dự báo.
+
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Epoch đã chạy, epoch được chọn và loss tại epoch được chọn}\label{tab:training}
+\begin{tabular}{@{}llrrrr@{}}\toprule
+Dữ liệu & Framework & Đã chạy & Được chọn & Train MSE & Val. MSE \\\midrule
+AAPL & PyTorch & 100 & 100 & 0.001036 & 0.001093 \\
+AAPL & Keras & 19 & 4 & 0.003826 & 0.001820 \\
+Bán lẻ & PyTorch & 100 & 100 & 0.011963 & 0.012322 \\
+Bán lẻ & Keras & 43 & 28 & 0.012857 & 0.012020 \\
+\bottomrule\end{tabular}
+\end{table}
+
+Validation MSE tốt nhất của Keras bán lẻ thấp hơn PyTorch bán lẻ, nhưng thứ hạng MAE và RMSE trên Test lại ngược lại. Validation và Test thuộc hai giai đoạn khác nhau, nên mô hình tốt hơn trên một đoạn không nhất thiết tốt hơn trên đoạn về sau. Đây cũng là lý do không dùng Test để lựa chọn epoch.
+
+\section{Dự báo AAPL bằng PyTorch}
+\subsection{Diễn biến hàm mất mát}
+Train MSE giảm từ 0.083737 ở epoch đầu xuống 0.001036 ở epoch 100; Validation MSE giảm từ 0.021914 xuống 0.001093. Epoch 100 đạt Validation loss thấp nhất và được dùng cho dự báo. Khoảng cách loss ở cuối quá trình tương đối nhỏ trên thang chuẩn hóa.
+
+\figbao{nb01_cell32_0.png}{Train và Validation loss của PyTorch RNN trên AAPL qua 100 epoch.}{fig:torch-stock-loss}
+
+Loss giảm cho thấy quá trình tối ưu đã giảm sai số trên các cửa sổ Train và Validation. Tuy nhiên, Test có vùng giá cao hơn cực đại Train và mức biến động khác, nên hai đường loss gần nhau không bảo đảm chất lượng dự báo ở giai đoạn mới. Kết quả Test cần được đối chiếu với baseline cùng giai đoạn.
+
+\subsection{Dự báo và độ chệch}
+\codefigure{code_torch_predict.png}{Mã dự đoán Test, inverse-transform và căn chỉnh ngày trong notebook 01.}{fig:code-torch-predict}
+
+Trong Hình~\ref{fig:code-torch-predict}, mỗi batch Test chỉ truyền cửa sổ vào mô hình; nhãn trong DataLoader được bỏ qua tại bước forward. Dự báo được chuyển về CPU và ghép thành mảng $(170,1)$. Nhãn gốc lấy trực tiếp từ \texttt{test\_data[seq\_len:, [3]]}, còn dự báo đi qua target scaler. Mảng ngày cũng bỏ đúng 20 quan sát đầu làm lịch sử, nên các hàng của bảng so sánh khớp cả giá trị lẫn thời điểm.
+
+\figbaorong{nb01_cell39_0.png}{Giá thực tế, dự báo và sai số tuyệt đối của PyTorch RNN trên 170 nhãn AAPL.}{fig:torch-stock-pred}
+
+Mô hình đạt MAE 7.43 USD, RMSE 8.09 USD và MAPE 4.52\%. Sai số trung bình $\widehat y-y$ bằng $-7.41$ USD, gần với độ lớn MAE. Điều này cho thấy sai số chủ yếu mang tính dự báo thấp hơn thực tế, thay vì các sai số dương và âm cân bằng nhau.
+
+Đường dự báo đi theo mức biến động chậm của chuỗi nhưng thấp hơn giá thực tế trong phần lớn giai đoạn giá cao. Hiện tượng này phù hợp với độ chệch âm và sai số theo tháng tăng ở cuối năm. Đồ thị chưa đủ để quy toàn bộ sai số thành độ trễ đúng một phiên; xác định độ trễ cần đối chiếu định lượng giữa các dịch chuyển thời gian.
+
+Ngày 01/08/2017 có giá thực tế 158.59 USD, trong khi mô hình dự báo 144.38 USD, sai số tuyệt đối 14.21 USD. Ngày 18/01/2018, giá thực tế 179.26 USD và dự báo khoảng 165.85 USD. Mô hình phản ứng hạn chế với những mức giá vượt xa vùng huấn luyện.
+
+\section{Dự báo AAPL bằng Keras}
+\subsection{Loss dao động và epoch được chọn}
+Keras chạy 19 epoch và khôi phục trọng số của epoch 4, tại đó Validation MSE bằng 0.001820. Train MSE ở epoch 4 là 0.003826. Ở epoch cuối, Train MSE là 0.001605 và Validation MSE là 0.002493; đó là thống kê của quá trình huấn luyện, không phải giá trị loss của checkpoint được khôi phục.
+
+\figbao{nb03_cell34_0.png}{Đường loss Keras trên AAPL. EarlyStopping khôi phục epoch 4 sau khi kết thúc epoch 19.}{fig:keras-stock-loss}
+
+Các dao động của Validation loss, đặc biệt ở đoạn giữa lịch sử huấn luyện, cho thấy quá trình tối ưu nhạy với cấu hình và thứ tự batch. Train loss cuối thấp hơn Train loss tại epoch tốt nhất không đồng nghĩa mô hình cuối khái quát tốt hơn. EarlyStopping chọn theo Validation nên giữ trọng số sớm hơn.
+
+\subsection{Kết quả dự báo}
+\figbaorong{nb03_cell41_0.png}{Giá thực tế, dự báo và phần dư của Keras SimpleRNN trên AAPL.}{fig:keras-stock-pred}
+
+MAE đạt 13.68 USD, RMSE 15.11 USD, MAPE 8.27\% và $R^2=-1.1612$. Sai số trung bình bằng $-13.64$ USD, cho thấy độ chệch âm còn lớn hơn cấu hình PyTorch. Ngày 18/01/2018, dự báo 153.09 USD thấp hơn giá thực 179.26 USD khoảng 26.17 USD.
+
+Mô hình đã được chọn bằng Validation và chạy đúng luồng suy luận, nhưng chất lượng trên Test thấp. $R^2$ âm có nghĩa tổng sai số bình phương vượt mức phân tán quanh trung bình Test. Đây là kết quả của cấu hình và lần khởi tạo hiện tại; nó không chứng minh SimpleRNN nói chung không thể học được chuỗi giá, cũng không xác lập ưu thế tổng quát của PyTorch trước Keras.
+
+\section{So sánh hai mô hình AAPL với baseline}
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Kết quả AAPL trên 170 nhãn Test; MAE/RMSE tính bằng USD, MSE bằng USD bình phương}\label{tab:stock-metrics}
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+Mô hình & MAE & RMSE & MSE & MAPE (\%) & $R^2$ \\\midrule
+Persistence & 1.50 & 2.11 & 4.46 & 0.94 & 0.9577 \\
+PyTorch RNN & 7.43 & 8.09 & 65.44 & 4.52 & 0.3805 \\
+Keras RNN & 13.68 & 15.11 & 228.32 & 8.27 & -1.1612 \\
+\bottomrule\end{tabular}
+\end{table}
+
+Baseline persistence có MAE 1.50 USD và RMSE 2.11 USD, thấp hơn cả hai RNN. MAE của PyTorch gấp khoảng 4.94 lần baseline; Keras gấp khoảng 9.10 lần. Với dự báo một phiên, giá đóng cửa gần nhất là mức tham chiếu mạnh trong tập Test này. MAPE vài phần trăm của RNN vì vậy vẫn chưa thể hiện lợi ích so với phương pháp đơn giản.
+
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Sai số AAPL theo tháng (USD)}\label{tab:stock-monthly}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+Tháng & Số nhãn & Thực tế TB & MAE PyTorch & MAE Keras \\\midrule
+2017-06 & 18 & 146.40 & 3.54 & 5.15 \\
+2017-07 & 20 & 148.30 & 4.61 & 6.80 \\
+2017-08 & 23 & 159.39 & 7.24 & 12.34 \\
+2017-09 & 20 & 157.61 & 5.75 & 10.51 \\
+2017-10 & 22 & 157.82 & 7.07 & 11.66 \\
+2017-11 & 21 & 172.41 & 10.29 & 20.59 \\
+2017-12 & 20 & 171.89 & 10.09 & 20.26 \\
+2018-01 & 21 & 174.01 & 10.59 & 21.55 \\
+2018-02 & 5 & 161.47 & 5.87 & 11.33 \\
+\bottomrule\end{tabular}
+\end{table}
+
+MAE PyTorch tăng từ 3.54 USD ở phần tháng 06/2017 được đánh giá lên 10.59 USD trong tháng 01/2018. Keras tăng từ 5.15 lên 21.55 USD trên hai nhóm tương ứng. Mức giá trung bình cùng thời gian tăng từ khoảng 146.40 lên 174.01 USD. Các số liệu phù hợp với nhận xét dự báo ngày càng thấp so với mức giá thực tế ở cuối giai đoạn.
+
+Tháng đầu và tháng cuối trong bảng chỉ gồm các ngày thuộc tập nhãn Test. Trung bình theo tháng được tính trên số ngày sẵn có, nên không phải thống kê của một tháng đầy đủ trong mọi hàng. MAE toàn kỳ là trung bình theo từng quan sát, không phải trung bình không trọng số của các MAE tháng.
+
+Kết quả hiện tại đo sai số của mức giá. Nó chưa đo độ chính xác tăng/giảm, lợi nhuận của chiến lược giao dịch, chi phí giao dịch hoặc rủi ro danh mục. Do đó, chất lượng dự báo mức giá không được quy đổi thành kết quả đầu tư trong báo cáo.
+
+\section{Dự báo doanh số bằng PyTorch}
+\subsection{Quá trình học}
+PyTorch bán lẻ chạy 100 epoch. Train MSE giảm từ 0.057896 xuống 0.011963; Validation MSE giảm từ 0.026929 xuống 0.012322. Epoch 100 có Validation loss thấp nhất. Cả hai đường đã giảm đáng kể so với điểm bắt đầu, nhưng phần cuối thay đổi chậm.
+
+\figbao{nb02_cell38_0.png}{Train và Validation loss của PyTorch RNN trên chuỗi doanh số.}{fig:torch-retail-loss}
+
+Khoảng cách Train và Validation ở cuối quá trình nhỏ, trong khi sai số Test vẫn lớn ở các ngày đột biến. Điều này cho thấy vấn đề không chỉ là chênh lệch loss giữa hai tập đầu, mà còn liên quan khả năng mô hình biểu diễn và dự báo các tình huống ngoài vùng dữ liệu quen thuộc. Chỉ riêng hình dạng loss chưa tách được tác động của ngoại lai, thiếu đặc trưng và giới hạn kiến trúc.
+
+\subsection{Chất lượng trên 78 ngày kiểm thử}
+\figbaorong{nb02_cell45_0.png}{Doanh số thực tế, dự báo và sai số tuyệt đối của PyTorch RNN.}{fig:torch-retail-pred}
+
+MAE bằng 15,567.14 GBP, RMSE 25,337.08 GBP và MAPE 33.83\%. RMSE lớn hơn MAE khoảng 1.63 lần, phản ánh ảnh hưởng đáng kể của một số sai số lớn. Độ chệch trung bình là $-5,608.71$ GBP. Mô hình tạo dự báo tương đối trơn, phản ánh một phần mức doanh số nhưng không theo kịp những đỉnh cao.
+
+Ngày 09/12/2011, mô hình dự báo 49,626.04 GBP so với giá trị thực của chuỗi đích là 200,918.98 GBP, sai số tuyệt đối 151,292.94 GBP. Ngày 20/09/2011 có sai số 76,259.07 GBP. Hai trường hợp này lớn hơn nhiều so với MAE toàn kỳ và làm tăng mạnh tổng sai số bình phương.
+
+\section{Dự báo doanh số bằng Keras}
+Keras bán lẻ chạy 43 epoch, khôi phục epoch 28 với Validation MSE 0.012020. Train MSE tại epoch 28 là 0.012857. Đến epoch 43, Validation MSE tăng lên 0.015998, trong khi Train MSE khoảng 0.013327. Cơ chế dừng sớm giữ lại trạng thái trước khi Validation suy giảm kéo dài.
+
+\figbao{nb04_cell36_0.png}{Train và Validation loss của Keras SimpleRNN trên doanh số; trọng số được chọn ở epoch 28.}{fig:keras-retail-loss}
+
+\codefigure{code_keras_predict.png}{Mã dự báo doanh số và tạo bảng so sánh trong notebook 04.}{fig:code-keras-predict}
+
+Hình~\ref{fig:code-keras-predict} dùng \texttt{model.predict} trên toàn bộ cửa sổ Test, sau đó inverse-transform và làm phẳng kết quả. Nhãn doanh số nằm ở cột 0 của \texttt{test\_raw\_data}; phép cắt từ \texttt{sequence\_length} khớp với 78 cửa sổ đã tạo. DataFrame kết hợp ngày, actual, predicted, sai số tuyệt đối và sai số phần trăm. Công thức tỷ lệ trong bảng chi tiết được dùng trên tập Test có actual dương; phần kiểm tra giá trị gần 0 nằm ở cell chỉ số tiếp theo.
+
+\figbaorong{nb04_cell43_0.png}{Doanh số thực tế, dự báo và sai số tuyệt đối của Keras SimpleRNN.}{fig:keras-retail-pred}
+
+Kết quả Test gồm MAE 15,954.78 GBP, RMSE 25,885.71 GBP, MAPE 32.58\% và $R^2=0.0213$. Độ chệch trung bình bằng $-8,626.20$ GBP, lớn hơn về độ lớn so với PyTorch. Ngày 09/12/2011 được dự báo 47,670.13 GBP, sai số tuyệt đối 153,248.85 GBP.
+
+Với 408 cửa sổ Train và 1,217 tham số, tỷ lệ số mẫu trên số tham số chỉ khoảng 0.335. Hơn nữa, các cửa sổ chồng lấn nhiều quan sát nên không độc lập hoàn toàn. Tỷ lệ này mô tả quy mô bài toán, không phải một tiêu chí đơn lẻ để kết luận overfitting. Đánh giá khả năng khái quát còn cần kết quả ở các giai đoạn và lần khởi tạo khác.
+
+\section{So sánh dự báo doanh số}
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Kết quả bán lẻ trên 78 nhãn Test; MAE/RMSE tính bằng GBP, MSE bằng GBP bình phương}\label{tab:retail-metrics}
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+Mô hình & MAE & RMSE & MSE & MAPE (\%) & $R^2$ \\\midrule
+Persistence & 22,192.88 & 30,387.10 & 923,375,944.42 & 53.58 & -0.3487 \\
+PyTorch RNN & 15,567.14 & 25,337.08 & 641,967,395.27 & 33.83 & 0.0623 \\
+Keras RNN & 15,954.78 & 25,885.71 & 670,070,050.89 & 32.58 & 0.0213 \\
+\bottomrule\end{tabular}
+\end{table}
+
+So với baseline, PyTorch giảm MAE khoảng 29.86\%, Keras giảm khoảng 28.11\%. Hai mô hình đều giảm RMSE, nhưng $R^2$ chỉ đạt 0.0623 và 0.0213. Như vậy, các RNN cải thiện so với việc sao chép doanh số ngày quan sát trước, song tổng sai số bình phương vẫn gần mức phân tán quanh trung bình Test.
+
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Chỉ số bổ sung của dự báo bán lẻ}\label{tab:retail-extra}
+\begin{tabular}{@{}lrrr@{}}\toprule
+Mô hình & WAPE (\%) & sMAPE (\%) & Bias (GBP) \\\midrule
+PyTorch RNN & 29.64 & 30.79 & -5,608.71 \\
+Keras RNN & 30.38 & 31.57 & -8,626.20 \\
+\bottomrule\end{tabular}
+\end{table}
+
+PyTorch có MAE, RMSE, WAPE và sMAPE thấp hơn Keras, trong khi Keras có MAPE thấp hơn. Sự đổi thứ hạng xuất phát từ cách cân trọng số: MAPE chia sai số từng ngày cho giá trị thực của ngày đó, còn WAPE chia tổng sai số cho tổng doanh số. Một mô hình có thể tốt hơn theo tỷ lệ trên các ngày quy mô nhỏ nhưng kém hơn ở các ngày có giá trị lớn.
+
+Tổng doanh số dương của 78 nhãn Test là 4,096,043.24 GBP. WAPE 29.64\% của PyTorch và 30.38\% của Keras tương ứng với tỷ lệ tổng sai số tuyệt đối trên tổng giá trị này. Các tỷ lệ không biểu diễn phần trăm đơn hàng dự báo đúng, vì đơn vị đánh giá là doanh số tổng hợp theo ngày.
+
+\subsection{Sai số theo tháng}
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Sai số doanh số theo tháng (GBP)}\label{tab:retail-monthly}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+Tháng & Số nhãn & Thực tế TB & MAE PyTorch & MAE Keras \\\midrule
+2011-09 & 18 & 44,616.91 & 16,780.59 & 16,557.52 \\
+2011-10 & 26 & 44,279.37 & 11,723.04 & 11,389.14 \\
+2011-11 & 26 & 57,841.03 & 12,324.56 & 13,460.86 \\
+2011-12 & 8 & 79,726.04 & 35,868.55 & 37,542.20 \\
+\bottomrule\end{tabular}
+\end{table}
+
+Tháng 12 trong tập Test chỉ gồm tám ngày quan sát đến 09/12/2011. MAE ở nhóm này đạt 35,868.55 GBP với PyTorch và 37,542.20 GBP với Keras, cao hơn các nhóm tháng trước. Đỉnh ngày cuối có ảnh hưởng lớn đến trung bình nhóm. MAPE tháng 11 thấp hơn tháng 10 ở cả hai mô hình dù quy mô doanh số trung bình cao hơn; đó là một biểu hiện của việc chỉ số phần trăm phụ thuộc mẫu số.
+
+\subsection{Các ngày có sai số lớn}
+\begin{table}[H]\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{Một số ngày sai số lớn: giá trị thực tế và dự báo (GBP)}\label{tab:retail-errors}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+Ngày & Thực tế & PyTorch & Keras & Persistence \\\midrule
+2011-09-15 & 78,151.97 & 33,775.10 & 34,956.93 & 23,578.78 \\
+2011-09-20 & 109,553.90 & 33,294.83 & 36,398.82 & 49,250.87 \\
+2011-11-14 & 114,237.40 & 59,746.32 & 54,641.22 & 33,878.15 \\
+2011-12-05 & 88,620.84 & 52,607.69 & 48,803.55 & 24,477.47 \\
+2011-12-09 & 200,918.98 & 49,626.04 & 47,670.13 & 82,371.55 \\
+\bottomrule\end{tabular}
+\end{table}
+
+Ngày 09/12/2011 là trường hợp sai số lớn nhất của cả hai mô hình. Riêng quan sát này đóng góp khoảng 45.71\% tổng sai số bình phương của PyTorch và 44.93\% của Keras. Dữ liệu của ngày này chứa cặp bán và hủy đã trình bày ở Bảng~\ref{tab:cancel-pair}. Phân tích lỗi vì vậy phải xét cả giá trị mô hình dự báo và định nghĩa doanh số trong bước tiền xử lý.
+
+Các ngày 20/09 và 14/11 cũng có đỉnh cao nhưng không được giải thích chỉ bằng cặp giao dịch ngày 09/12. Đầu vào hiện tại chỉ gồm các thống kê tổng hợp đã quan sát, không có thông tin trước về đơn hàng lớn, khuyến mại hoặc lịch sự kiện. Khả năng mô hình dự báo chính xác những bước nhảy đó bị giới hạn bởi thông tin đầu vào.
+
+\section{Các giới hạn của kết quả thực nghiệm}
+\subsection{Dữ liệu, mục tiêu và tính đại diện}
+Thí nghiệm chứng khoán chỉ dùng một mã AAPL và một giai đoạn kiểm thử. Thí nghiệm bán lẻ chỉ dùng một doanh nghiệp, với 604 ngày quan sát và đỉnh dữ liệu chịu ảnh hưởng của giao dịch hủy. Vì vậy, kết quả không đại diện cho mọi mã cổ phiếu hoặc mọi hoạt động bán lẻ.
+
+Ở cả hai bài toán, Test nằm sau Train về thời gian. Điều này mô phỏng hướng dự báo thực tế nhưng tạo dịch chuyển phân bố, đặc biệt ở mức giá AAPL và các đỉnh doanh số. Việc scale đúng theo Train ngăn rò rỉ thống kê tương lai, song không loại bỏ khó khăn ngoại suy.
+
+\subsection{Thiết kế mô hình và tối ưu}
+Cửa sổ 20 phiên và 14 quan sát là cấu hình cố định của bài, chưa được khảo sát có hệ thống trên nhiều độ dài. Mạng một tầng 32 chiều giữ kiến trúc đơn giản để đối chiếu hai framework. Các yếu tố như learning rate, khởi tạo, loss bền vững hơn với ngoại lai hoặc cổng nhớ chưa được tách riêng qua các thí nghiệm kiểm soát.
+
+Mỗi cấu hình chỉ có một seed và một lần chia theo thời gian. Báo cáo chưa có khoảng tin cậy hay độ lệch chuẩn qua nhiều lần chạy. Sự khác biệt nhỏ giữa hai mô hình bán lẻ vì vậy là thứ hạng của lần thực nghiệm hiện tại, chưa xác lập độ ổn định thống kê của thứ hạng.
+
+\subsection{Hướng mở rộng gắn với sai số quan sát}
+Đối với AAPL, một hướng mở rộng là dự báo biến động hoặc lợi suất thay cho mức giá, sau đó so sánh với baseline trên đúng mục tiêu mới. Việc thêm mô hình tuyến tính trên các giá trị trễ sẽ giúp kiểm tra mức đóng góp của tính phi tuyến và bộ nhớ hồi tiếp. Đánh giá cuốn chiếu qua nhiều giai đoạn có thể cho thấy hiệu quả thay đổi thế nào khi mức giá dịch chuyển.
+
+Đối với bán lẻ, định nghĩa doanh thu thuần và cơ chế đối soát hủy/hoàn trả là hướng mở rộng về dữ liệu. Nếu giữ bài toán doanh số dương, có thể bổ sung thứ trong tuần, tháng, khoảng cách đến ngày quan sát trước và thông tin đơn hàng biết trước. Log-transform, Huber loss hoặc mô hình dự báo phân vị là các cấu hình có thể khảo sát để xử lý phân bố lệch và sai số cực đoan.
+
+LSTM và GRU là các hướng mở rộng kiến trúc, nhưng cần so sánh trên cùng dữ liệu và giao thức với Vanilla RNN và baseline. Mọi cấu hình bổ sung được lựa chọn bằng Validation; một tập kiểm thử về sau hoặc các mốc rolling evaluation sẽ dùng để đánh giá mức cải thiện sau lựa chọn.
+
+
+\chapter{Quy trình suy luận và thiết kế triển khai}
+\label{chap:deployment}
+
+\section{Suy luận đã thực hiện trong notebook}
+Bốn notebook thực nghiệm đã thực hiện suy luận trên tập Test bằng trọng số được chọn theo Validation. Luồng xử lý gồm lấy cửa sổ đã chuẩn hóa, gọi mô hình ở chế độ suy luận, khôi phục thang đo của biến mục tiêu và gắn kết quả với ngày tương ứng. Các đồ thị và chỉ số ở Chương~\ref{chap:results} được tạo từ luồng này.
+
+Với PyTorch, \texttt{model.eval()} đặt mô hình ở chế độ đánh giá; \texttt{torch.no\_grad()} tắt việc ghi đồ thị gradient khi dự báo. Hai thao tác có mục đích khác nhau. Với Keras, \texttt{model.predict()} thực hiện suy luận theo batch. Sau đó cùng một target scaler đã fit trên Train được dùng để đưa kết quả về đơn vị gốc.
+
+\begin{lstlisting}[language=Python,caption={Luồng suy luận một cửa sổ bằng PyTorch.}]
+window_scaled = feature_scaler.transform(window_raw)
+batch = torch.tensor(
+    window_scaled[None, :, :], dtype=torch.float32,
+    device=device
+)
+model.eval()
+with torch.no_grad():
+    pred_scaled = model(batch).cpu().numpy()
+prediction = target_scaler.inverse_transform(
+    pred_scaled.astype(np.float64)
+)[0, 0]
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Luồng suy luận tương ứng bằng Keras.}]
+window_scaled = feature_scaler.transform(window_raw)
+batch = window_scaled[None, :, :].astype(np.float32)
+pred_scaled = model.predict(batch, verbose=0)
+prediction = target_scaler.inverse_transform(
+    pred_scaled.astype(np.float64)
+)[0, 0]
+\end{lstlisting}
+
+Hai đoạn mã mô tả phép suy luận từ cửa sổ đầu vào đã đủ dữ liệu. Chúng dùng lại mô hình và scaler trong phiên chạy. Phiên bản hiện tại chưa lưu đầy đủ gói mô hình cùng scaler để khởi động một dịch vụ độc lập, chưa có API/web và chưa có kết quả kiểm thử trên máy chủ triển khai. Nội dung các mục tiếp theo là thiết kế cho bước đóng gói đó.
+
+\section{Các thành phần của một gói dự báo}
+Một gói dự báo phải bảo toàn cả mô hình và phép biến đổi dữ liệu. Chỉ giữ trọng số sẽ không đủ để tái tạo dự báo ở đơn vị gốc. Cấu hình đóng gói đề xuất gồm các thành phần trong Bảng~\ref{tab:deployment-artifacts}.
+
+\begin{table}[H]\centering\small
+\caption{Thành phần của gói triển khai đề xuất}\label{tab:deployment-artifacts}
+\begin{tabularx}{\linewidth}{@{}p{3.5cm}Y@{}}\toprule
+Thành phần & Nội dung cần bảo toàn \\\midrule
+Trọng số mô hình & Trọng số tại epoch tốt nhất theo Validation, gắn với framework và kiến trúc \\
+Kiến trúc & Input size, hidden size, số tầng, kích hoạt và đầu ra \\
+Feature scaler & Cực trị hoặc tham số MinMax đã fit trên Train \\
+Target scaler & Phép đổi từ dự báo chuẩn hóa về USD/GBP \\
+Thứ tự đặc trưng & OHLCV hoặc bốn biến bán lẻ, đúng thứ tự khi huấn luyện \\
+Quy tắc thời gian & Độ dài cửa sổ, thứ tự tăng dần, một bước theo quan sát \\
+Định nghĩa mục tiêu & Close AAPL hoặc doanh số các dòng bán dương \\
+Metadata & Phiên bản thư viện, mốc Train/Validation, epoch được chọn \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Tên framework là một phần định danh gói vì trạng thái trọng số của PyTorch và Keras không dùng thay thế trực tiếp cho nhau. Mỗi bài toán cũng phải dùng scaler tương ứng; scaler của AAPL không có ý nghĩa với doanh số bán lẻ. Ngay trong một bài toán, hoán đổi thứ tự cột khi suy luận sẽ thay đổi phép tính dù shape tensor vẫn hợp lệ.
+
+\section{Dữ liệu đầu vào và kết quả trả về}
+Đối với AAPL, một yêu cầu dự báo cần 20 phiên hoàn chỉnh theo thời gian với năm giá trị \texttt{open, high, low, close, volume} tại mỗi phiên. Đối với bán lẻ, cần 14 ngày quan sát với \texttt{daily\_revenue, daily\_quantity, transaction\_count, avg\_order\_value}, được tổng hợp theo cùng điều kiện lọc như lúc huấn luyện.
+
+Lớp tiếp nhận dữ liệu sẽ kiểm tra số quan sát, số đặc trưng, giá trị hữu hạn, ngày không trùng và thứ tự thời gian. Với dữ liệu giao dịch thô, bước tổng hợp phải hoàn thành trước khi tạo cửa sổ. Scaler chỉ được gọi \texttt{transform} trong suy luận; fit lại trên cửa sổ mới sẽ thay đổi ý nghĩa các đầu vào so với trọng số đã học.
+
+Kết quả đề xuất gồm giá trị dự báo, đơn vị, thời điểm cuối của lịch sử, khoảng dự báo một bước và định danh phiên bản mô hình. Với bán lẻ, mô hình hiện dự báo ngày quan sát tiếp theo, nên dữ liệu lịch hoạt động phải được bổ sung nếu ứng dụng cần trả một ngày lịch cụ thể. Gán mặc định ngày kế tiếp trên lịch sẽ không tương ứng với chuỗi đã huấn luyện.
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[
+  box/.style={draw,rounded corners,align=center,minimum width=6.4cm,minimum height=0.9cm,font=\small},
+  link/.style={-Latex,thick},node distance=0.45cm]
+\node[box] (a) {Nhận lịch sử và kiểm tra dữ liệu};
+\node[box,below=of a] (b) {Sắp xếp, tổng hợp và chọn đúng đặc trưng};
+\node[box,below=of b] (c) {MinMax theo tham số Train, tạo $(1,L,D)$};
+\node[box,below=of c] (d) {RNN với trọng số Validation tốt nhất};
+\node[box,below=of d] (e) {Inverse transform và trả dự báo cùng metadata};
+\draw[link] (a)--(b);\draw[link] (b)--(c);\draw[link] (c)--(d);\draw[link] (d)--(e);
+\end{tikzpicture}
+\caption{Luồng xử lý của dịch vụ dự báo được đề xuất.}\label{fig:deploy-flow}
+\end{figure}
+
+\section{Kiểm thử khi đóng gói và vận hành}
+Phép kiểm thử đầu tiên là lấy một cửa sổ Test cố định, so sánh dự báo trong notebook với dự báo sau khi lưu và nạp lại toàn bộ gói. Dự báo cần khớp trong sai số số học đã chọn; các bước chuẩn hóa và khôi phục đơn vị phải giữ nguyên. So sánh cả đầu ra chuẩn hóa lẫn giá trị gốc giúp xác định lỗi phát sinh ở mô hình hay ở scaler.
+
+Tiếp theo là các trường hợp thiếu bước thời gian, thiếu cột, cột sai thứ tự, NaN, dữ liệu ngày lặp và lịch sử không tăng dần. Giao diện phải phản hồi rõ dữ liệu không hợp lệ thay vì tự tạo đầu vào khác với quy tắc huấn luyện. Một yêu cầu đúng shape nhưng sai thứ tự cột là ví dụ cho thấy kiểm tra kích thước chưa đủ.
+
+Sau triển khai, MAE và độ chệch được tính khi giá trị thực tế xuất hiện. Tỷ lệ đầu vào vượt cực trị Train có thể dùng để theo dõi dịch chuyển phân bố, cùng với tần suất lỗi dữ liệu và thời gian phản hồi. Những chỉ số vận hành này chưa được đo trong phạm vi notebook hiện tại.
+
+\chapter{Kết luận}
+\label{chap:conclusion}
+
+\section{Kết quả đạt được}
+Assignment 06 xây dựng được mối liên hệ giữa công thức hồi tiếp, phép hợp hàm và mã RNN trong hai framework. Ví dụ NumPy tái hiện từng bước cập nhật trạng thái; kiểm tra sai phân hữu hạn xác nhận Jacobian $D_tW_h$ với sai số khoảng $3.01\times10^{-12}$. Các ví dụ tensor thể hiện rõ đầu vào ba chiều, trạng thái cuối và tầng hồi quy một đầu ra.
+
+Hai tập dữ liệu đã được mô tả và xử lý theo đặc điểm của từng bài toán. AAPL cung cấp 1,259 phiên đầy đủ, còn Online Retail II được chuyển từ 1,067,371 dòng giao dịch thành 604 ngày quan sát sau lọc. Quy trình chia theo thời gian, fit scaler trên Train và căn chỉnh nhãn được áp dụng thống nhất giữa PyTorch và Keras.
+
+Trên AAPL, PyTorch RNN đạt MAE 7.43 USD và Keras SimpleRNN đạt 13.68 USD, trong khi baseline persistence đạt 1.50 USD. Hai cấu hình RNN chưa tạo ra cải thiện so với baseline ở giai đoạn kiểm thử. Sai số chủ yếu theo hướng dự báo thấp hơn thực tế và tăng khi mức giá đi xa khỏi vùng Train.
+
+Trên doanh số bán lẻ, PyTorch đạt MAE 15,567.14 GBP và Keras đạt 15,954.78 GBP, giảm tương ứng khoảng 29.86\% và 28.11\% so với baseline. Tuy nhiên, $R^2$ gần 0 và sai số ở các đỉnh vẫn lớn. Đặc biệt, cặp bán và hủy ngày 09/12/2011 cho thấy định nghĩa mục tiêu tác động trực tiếp đến diễn giải chất lượng dự báo.
+
+\section{Phạm vi hoàn thành và bước phát triển tiếp theo}
+Phần cài đặt hiện hoàn thành huấn luyện, lựa chọn trọng số và dự báo Test cho cả PyTorch và Keras. Quy trình suy luận một cửa sổ đã được xác định cùng các thành phần của gói triển khai. Ứng dụng phục vụ độc lập, lưu/nạp đầy đủ mô hình và kiểm thử dịch vụ là phần phát triển tiếp theo.
+
+Ưu tiên cải thiện mô hình xuất phát từ các lỗi đã đo: giảm độ chệch trên chuỗi giá tăng, xử lý định nghĩa doanh số có giao dịch hủy, bổ sung thông tin lịch và kiểm tra qua nhiều giai đoạn. Baseline giữ vai trò mốc so sánh xuyên suốt. Mức cải thiện chỉ có ý nghĩa khi được đánh giá trên cùng nhãn, cùng thời điểm phát sinh dự báo và cùng định nghĩa mục tiêu.
+
+\appendix
+\chapter{Môi trường và đối chiếu thực nghiệm}
+
+\section{Phiên bản môi trường thực thi}
+\begin{table}[H]\centering\small
+\caption{Các thư viện trong môi trường chạy notebook}\label{tab:environment}
+\begin{tabular}{@{}ll@{}}\toprule
+Thành phần & Phiên bản \\\midrule
+Python & 3.12.14 \\
+NumPy & 2.5.2 \\
+pandas & 3.0.5 \\
+scikit-learn & 1.9.0 \\
+PyTorch & 2.14.0+cpu \\
+TensorFlow & 2.21.0 \\
+Keras & 3.15.1 \\
+Matplotlib & 3.11.1 \\
+Seaborn & 0.13.2 \\
+nbformat / nbclient & 5.11.1 / 0.11.0 \\\bottomrule
+\end{tabular}
+\end{table}
+
+Danh sách phụ thuộc được lưu trong \path{requirements.txt} của Assignment 06. Các notebook huấn luyện đọc CSV; tệp Excel được giữ làm bản dữ liệu đi kèm. Môi trường thực nghiệm sử dụng CPU. Khác biệt thư viện, backend hoặc thiết bị có thể dẫn đến sai khác số học khi chạy lại, ngay cả khi cố định seed.
+
+\section{Tệp mã nguồn tương ứng}
+\begin{table}[H]\centering\small
+\caption{Tên đầy đủ của các notebook}\label{tab:source-files}
+\begin{tabularx}{\linewidth}{@{}p{1.4cm}Y@{}}\toprule
+Ký hiệu & Tệp \\\midrule
+00 & \path{00_RNN_Basic_Concepts.ipynb} \\
+01 & \path{01_RNN_PyTorch_Stock.ipynb} \\
+02 & \path{02_RNN_PyTorch_OnlineRetail.ipynb} \\
+03 & \path{03_RNN_Keras_Stock.ipynb} \\
+04 & \path{04_RNN_Keras_OnlineRetail.ipynb} \\\bottomrule
+\end{tabularx}
+\end{table}
+
+Mã nguồn dự án: \url{https://github.com/anhducwszxje/Assignment06.git}.
+
+Notebook 00 chạy các minh họa nền tảng. Bốn notebook còn lại có thể được thực thi độc lập với dữ liệu trong thư mục \path{dataset}. Chuỗi bước trong từng notebook là nạp dữ liệu, mô tả và làm sạch, chia thời gian, chuẩn hóa, tạo cửa sổ, xây dựng mô hình, huấn luyện và đánh giá. Khi chạy lại, thực thi theo thứ tự cell từ đầu bảo đảm scaler, mô hình và các mảng dự báo thuộc cùng một phiên.
+
+\section{Kiểm tra tính nhất quán của kết quả}
+Năm notebook có tổng cộng 81 cell mã; toàn bộ đã thực thi có output và không có cell lỗi trong lần chạy dùng cho báo cáo. Các cặp framework có cùng số mẫu, ngày nhãn, giá trị thực tế và dự báo baseline trên từng bài toán. MAE, MSE và RMSE đã được tính đối chiếu từ mảng dự báo và nhãn thực tế.
+
+Trọng số PyTorch được chọn ở epoch có Validation loss nhỏ nhất; Keras khôi phục best weights qua EarlyStopping. Kết quả inverse-transform được so với nhãn gốc ở đơn vị tiền. Các biểu đồ trong các chương dữ liệu và thực nghiệm được trích từ output notebook; số liệu trong bảng giữ thêm độ chính xác khi tính và chỉ làm tròn ở bước trình bày.
+
+Các kiểm tra này xác nhận sự nhất quán của phép tính và báo cáo kết quả. Chúng không thay thế đánh giá trên dữ liệu mới, nhiều seed hoặc thử nghiệm vận hành sau khi đóng gói dịch vụ.
+
+\clearpage
+\addcontentsline{toc}{chapter}{Tài liệu tham khảo}
+\renewcommand{\bibname}{Tài liệu tham khảo}
+\begin{thebibliography}{99}
+\bibitem{torch-rnn} PyTorch, \emph{RNN -- PyTorch 2.14 documentation}. \url{https://docs.pytorch.org/docs/2.14/generated/torch.nn.RNN.html}.
+\bibitem{keras-rnn} Keras, \emph{SimpleRNN layer}. \url{https://keras.io/api/layers/recurrent_layers/simple_rnn/}.
+\bibitem{adam} D. P. Kingma và J. Ba, \emph{Adam: A Method for Stochastic Optimization}, ICLR, 2015. \url{https://arxiv.org/abs/1412.6980}.
+\bibitem{pascanu} R. Pascanu, T. Mikolov và Y. Bengio, \emph{On the difficulty of training Recurrent Neural Networks}, ICML, 2013. \url{https://arxiv.org/abs/1211.5063}.
+\bibitem{lstm} S. Hochreiter và J. Schmidhuber, \emph{Long Short-Term Memory}, Neural Computation, tập 9, số 8, tr. 1735--1780, 1997. \url{https://www.bioinf.jku.at/publications/older/2604.pdf}.
+\bibitem{gru} K. Cho và cộng sự, \emph{Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation}, EMNLP, 2014. \url{https://arxiv.org/abs/1406.1078}.
+\bibitem{stocks} C. Nugent, \emph{S\&P 500 stock data}, Kaggle. Tệp sử dụng: \path{all_stocks_5yr.csv}. \url{https://www.kaggle.com/datasets/camnugent/sandp500}.
+\bibitem{retail} D. Chen, \emph{Online Retail II}, UCI Machine Learning Repository, 2012. DOI: 10.24432/C5CG6D. \url{https://archive.ics.uci.edu/dataset/502/online+retail+ii}.
+\bibitem{minmax} scikit-learn, \emph{MinMaxScaler}. \url{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html}.
+\bibitem{early-stopping} Keras, \emph{EarlyStopping}. \url{https://keras.io/api/callbacks/early_stopping/}.
+\end{thebibliography}
+
+\end{document}
